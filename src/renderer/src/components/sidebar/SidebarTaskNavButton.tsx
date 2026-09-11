@@ -1,6 +1,7 @@
 import React from 'react'
 import { EyeOff, Github, Gitlab, List } from 'lucide-react'
 import { JiraIcon } from '@/components/icons/JiraIcon'
+import { GiteaIcon } from '@/components/icons/GiteaIcon'
 import { LinearIcon } from '@/components/icons/LinearIcon'
 import {
   ContextMenu,
@@ -226,6 +227,17 @@ export function SidebarTaskNavButton(): React.JSX.Element | null {
                 onOpen={() => openTaskPage({ taskSource: 'jira' })}
               >
                 <JiraIcon className="size-3.5" />
+              </TaskProviderShortcut>
+            ) : null}
+            {visibleTaskProviders.includes('gitea') ? (
+              <TaskProviderShortcut
+                label={translate(
+                  'auto.components.sidebar.SidebarNav.giteaOpenTasks',
+                  'Open Gitea tasks'
+                )}
+                onOpen={() => openTaskPage({ taskSource: 'gitea' })}
+              >
+                <GiteaIcon className="size-3.5" />
               </TaskProviderShortcut>
             ) : null}
           </span>

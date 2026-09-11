@@ -221,4 +221,32 @@ describe('gitea site credential store', () => {
         .source
     ).toBe('anonymous')
   })
+
+  it('tests a stored site with its saved token', async () => {
+    const fetchMock = vi.fn(async () => Response.json({ login: 'ada' }))
+    vi.stubGlobal('fetch', fetchMock)
+    const store = await loadStoreModule()
+    const { testGiteaSite } = await import('./site-validation')
+    const saved = await store.saveGiteaSite('https://git.example.com', 'tok-123')
+    expect(saved.ok).toBe(true)
+    if (!saved.ok) {
+      return
+    }
+
+    await expect(testGiteaSite(saved.site.id)).resolves.toEqual({
+      ok: true,
+      account: 'ada'
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('reports unknown sites and missing tokens on test', async () => {
+    await loadStoreModule()
+    const { testGiteaSite } = await import('./site-validation')
+
+    await expect(testGiteaSite('nope')).resolves.toEqual({
+      ok: false,
+      error: expect.any(String)
+    })
+  })
 })

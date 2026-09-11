@@ -46,5 +46,12 @@ export const giteaApi = {
   authStatus: (args: GiteaRepoSelectorArgs) => ipcRenderer.invoke('gitea:authStatus', args),
 
   workItemDetails: (args: GiteaRepoSelectorArgs & { number: number }) =>
-    ipcRenderer.invoke('gitea:workItemDetails', args)
+    ipcRenderer.invoke('gitea:workItemDetails', args),
+
+  saveSite: (args: { baseUrl: string; token: string }) =>
+    ipcRenderer.invoke('gitea:saveSite', args),
+
+  removeSite: (args: { id: string }) => ipcRenderer.invoke('gitea:removeSite', args),
+
+  testSite: (args: { id: string }) => ipcRenderer.invoke('gitea:testSite', args)
 }

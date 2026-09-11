@@ -8,6 +8,7 @@ import {
   resolveVisibleTaskProvider
 } from '../../../../shared/task-providers'
 import { JiraIcon } from '@/components/icons/JiraIcon'
+import { GiteaIcon } from '@/components/icons/GiteaIcon'
 import { LinearIcon } from '@/components/icons/LinearIcon'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/store'
@@ -15,6 +16,7 @@ import { SearchableSetting } from './SearchableSetting'
 import { SettingsSubsectionHeader } from './SettingsFormControls'
 import { CodeHostSetupSteps, JiraSetupSteps } from './TaskSourceSimpleSetup'
 import { TaskSourceLinearSetup } from './TaskSourceLinearSetup'
+import { TaskSourceGiteaSetup } from './TaskSourceGiteaSetup'
 import { TaskSourceProviderCard } from './TaskSourceProviderCard'
 import {
   getStalledVisibleTaskProviders,
@@ -89,6 +91,18 @@ const PROVIDER_META: Record<
       )
     },
     Icon: ({ className }) => <JiraIcon className={className} />
+  },
+  gitea: {
+    get label() {
+      return translate('auto.components.settings.TasksPane.giteaLabel', 'Gitea')
+    },
+    get description() {
+      return translate(
+        'auto.components.settings.TasksPane.giteaDescription',
+        'Connect a Gitea/Forgejo host and show its issues in Tasks.'
+      )
+    },
+    Icon: ({ className }) => <GiteaIcon className={className} />
   }
 }
 
@@ -226,6 +240,16 @@ export function TasksPane({ settings, updateSettings }: TasksPaneProps): React.J
                     onToggleVisible={() => toggleProvider('jira')}
                     onConnected={() => void checkJiraConnection()}
                     onOpenIntegrations={() => openIntegrations(JIRA_INTEGRATION_SECTION_ID)}
+                  />
+                ) : provider === 'gitea' ? (
+                  <TaskSourceGiteaSetup
+                    connected={readiness.connected}
+                    checking={readiness.checking}
+                    visible={visible}
+                    canHide={canHide}
+                    onToggleVisible={() => toggleProvider('gitea')}
+                    sites={settings.giteaSites ?? []}
+                    onSitesChange={(sites) => updateSettings({ giteaSites: sites })}
                   />
                 ) : (
                   <CodeHostSetupSteps

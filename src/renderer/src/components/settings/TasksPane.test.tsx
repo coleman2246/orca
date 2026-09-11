@@ -137,7 +137,8 @@ describe('TasksPane', () => {
         skillChecking: false,
         visible: true
       },
-      jira: { connected: false, checking: false, visible: false }
+      jira: { connected: false, checking: false, visible: false },
+      gitea: { connected: false, checking: false, visible: true }
     }
   })
 
@@ -183,6 +184,15 @@ describe('TasksPane', () => {
     expect(markup).toContain('Connect required')
   })
 
+  it('renders the Gitea setup card once the provider is registered', () => {
+    mocks.readiness.gitea = { connected: true, checking: false, visible: true }
+
+    const markup = renderPane()
+
+    expect(markup).toContain('Gitea')
+    expect(markup).toContain('Connect a Gitea/Forgejo host and show its issues in Tasks.')
+  })
+
   it('hides the incomplete banner when every visible provider is ready', () => {
     mocks.readiness.linear = {
       connected: true,
@@ -198,6 +208,7 @@ describe('TasksPane', () => {
   it('does not warn or expand while connection checks are still in flight', () => {
     mocks.readiness.github = { connected: false, checking: true, visible: true }
     mocks.readiness.gitlab = { connected: false, checking: true, visible: true }
+    mocks.readiness.gitea = { connected: false, checking: true, visible: true }
     mocks.readiness.linear = {
       connected: false,
       checking: true,
@@ -319,6 +330,7 @@ describe('TasksPane', () => {
     // Cold open: nothing has resolved, so no card auto-expands yet.
     mocks.readiness.github = { connected: false, checking: true, visible: true }
     mocks.readiness.gitlab = { connected: false, checking: true, visible: true }
+    mocks.readiness.gitea = { connected: false, checking: true, visible: true }
     mocks.readiness.linear = {
       connected: false,
       checking: true,
@@ -337,6 +349,9 @@ describe('TasksPane', () => {
       skillChecking: false,
       visible: true
     }
+    // Gitea stays checking until the code-host preflight lands, so it cannot
+    // steal the expansion Linear just claimed.
+    mocks.readiness.gitea = { connected: false, checking: true, visible: true }
     await rerenderInteractivePane()
     expect(container?.querySelector('[data-testid="linear-setup"]')).not.toBeNull()
 
@@ -344,6 +359,7 @@ describe('TasksPane', () => {
     // first incomplete provider, but it must not steal Linear's expansion.
     mocks.readiness.github = { connected: false, checking: false, visible: true }
     mocks.readiness.gitlab = { connected: false, checking: false, visible: true }
+    mocks.readiness.gitea = { connected: false, checking: false, visible: true }
     await rerenderInteractivePane()
 
     expect(container?.querySelector('[data-testid="linear-setup"]')).not.toBeNull()

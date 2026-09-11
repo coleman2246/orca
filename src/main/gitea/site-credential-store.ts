@@ -245,7 +245,7 @@ function envValue(name: string): string | null {
   return value.length > 0 ? value : null
 }
 
-async function readUserAccount(
+export async function readUserAccount(
   baseUrl: string,
   token: string
 ): Promise<{ ok: true; account: string | null } | { ok: false; error: string }> {

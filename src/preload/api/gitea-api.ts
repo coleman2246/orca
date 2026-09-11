@@ -5,6 +5,7 @@ import type {
   GiteaIssueComment,
   GiteaIssueInfo,
   GiteaIssueUpdatePatch,
+  GiteaSite,
   GiteaWorkItem
 } from '../../shared/gitea-types'
 
@@ -59,4 +60,14 @@ export type GiteaApi = {
       number: number
     }
   ) => Promise<{ issue: GiteaIssueInfo; comments: GiteaIssueComment[] } | null>
+  /** Settings site management — global (no repo context). Validates via GET
+   *  /user in main; tokens never leave the secret store. */
+  saveSite: (args: {
+    baseUrl: string
+    token: string
+  }) => Promise<{ ok: true; site: GiteaSite } | { ok: false; error: string }>
+  removeSite: (args: { id: string }) => Promise<{ ok: true } | { ok: false; error: string }>
+  testSite: (args: {
+    id: string
+  }) => Promise<{ ok: true; account: string | null } | { ok: false; error: string }>
 }

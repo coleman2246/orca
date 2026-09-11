@@ -18,7 +18,10 @@ export function createGiteaApi(): WebGiteaApi {
     updateIssue: () => Promise.resolve({ ok: false, error: WEB_GITEA_UNAVAILABLE }),
     addComment: () => Promise.resolve({ ok: false, error: WEB_GITEA_UNAVAILABLE }),
     authStatus: () => Promise.resolve({ connected: false, sites: [] }),
-    workItemDetails: () => Promise.resolve(null)
+    workItemDetails: () => Promise.resolve(null),
+    saveSite: () => Promise.resolve({ ok: false, error: WEB_GITEA_UNAVAILABLE }),
+    removeSite: () => Promise.resolve({ ok: false, error: WEB_GITEA_UNAVAILABLE }),
+    testSite: () => Promise.resolve({ ok: false, error: WEB_GITEA_UNAVAILABLE })
   } satisfies WebGiteaApi
 
   return giteaApi

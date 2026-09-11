@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { TASK_SOURCE_CONTEXT_RUNTIME_CAPABILITY } from '../../../shared/protocol-version'
 import type { ExecutionHostRegistryEntry } from '../../../shared/execution-host-registry'
+import { filterAvailableTaskProviders } from '../../../shared/task-providers'
+import { getSourceOptions } from './task-page-localized-options'
 import { getTaskSourceHostAvailabilityForHost } from './task-page-source-context'
 
 // Why: a complete typed entry keeps these cases honest when the registry shape changes.
@@ -78,5 +80,24 @@ describe('getTaskSourceHostAvailabilityForHost', () => {
       health: 'disconnected',
       status: 'disconnected'
     })
+  })
+})
+
+describe('task-page-task-source-host-availability (gitea)', () => {
+  it('renders a Gitea provider row in the Tasks source picker', () => {
+    const gitea = getSourceOptions().find((source) => source.id === 'gitea')
+
+    expect(gitea).toMatchObject({ id: 'gitea', label: 'Gitea' })
+    expect(typeof gitea?.Icon).toBe('function')
+  })
+
+  it('keeps gitea when giteaConnected', () => {
+    expect(
+      filterAvailableTaskProviders(['github', 'gitea'], {
+        gitlabInstalled: false,
+        linearConnected: false,
+        giteaConnected: true
+      })
+    ).toEqual(['github', 'gitea'])
   })
 })

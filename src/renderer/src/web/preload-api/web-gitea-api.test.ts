@@ -29,7 +29,10 @@ describe('web Gitea API stubs', () => {
     for (const result of [
       await api.createIssue({ repoPath: '/workspace/repo', title: 'Widget' }),
       await api.updateIssue({ repoPath: '/workspace/repo', number: 1, updates: {} }),
-      await api.addComment({ repoPath: '/workspace/repo', number: 1, body: 'Note' })
+      await api.addComment({ repoPath: '/workspace/repo', number: 1, body: 'Note' }),
+      await api.saveSite({ baseUrl: 'https://git.example.com', token: 'tok' }),
+      await api.removeSite({ id: 's1' }),
+      await api.testSite({ id: 's1' })
     ]) {
       expect(result).toEqual({ ok: false, error: expect.any(String) })
     }

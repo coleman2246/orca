@@ -60,6 +60,14 @@ export function useTaskSourceProviderReadiness(
   const jiraConnected = !jiraChecking && jiraStatus.connected === true
   const linearChecking =
     linearStatusContextKey !== providerRuntimeContextKey || !linearStatusChecked
+  // Why: Gitea connection facts are settings metadata (site rows persisted by
+  // the setup card); tokens never leave the secret store, so no async check.
+  // Still, report checking until the sibling provider checks settle — gitea is
+  // last in provider order, so an instantly-settled card would claim the
+  // auto-expand slot on every cold settings open and stick there, blocking
+  // the Linear expansion the sticky mechanism protects.
+  const giteaConnected = (settings?.giteaSites?.length ?? 0) > 0
+  const giteaChecking = reviewChecking || linearChecking || jiraChecking
   // Normalization returns a new array, so memoize by provider contents.
   const visibleProvidersKey = visibleProviders.join(',')
 
@@ -89,9 +97,16 @@ export function useTaskSourceProviderReadiness(
         connected: jiraConnected,
         checking: jiraChecking,
         visible: visible.has('jira')
+      },
+      gitea: {
+        connected: giteaConnected,
+        checking: giteaChecking,
+        visible: visible.has('gitea')
       }
     }
   }, [
+    giteaConnected,
+    giteaChecking,
     githubConnected,
     gitlabConnected,
     jiraChecking,

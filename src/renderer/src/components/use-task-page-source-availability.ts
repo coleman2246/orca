@@ -37,7 +37,8 @@ export function useTaskPageSourceAvailabilityPrelude(model: TaskPageRuntimeHosts
   } = model
   const getTaskPickerRepoHostLabel = useCallback(
     (repo: Repo): string | null => {
-      const provider = taskSource === 'gitlab' ? 'gitlab' : 'github'
+      const provider =
+        taskSource === 'gitlab' ? 'gitlab' : taskSource === 'gitea' ? 'gitea' : 'github'
       const context = getTaskPageRepoSourceContext(repo, provider)
       const hostId = context?.hostId ?? repo.executionHostId ?? 'local'
       return hostRegistryById.get(hostId)?.label ?? null
@@ -138,8 +139,31 @@ export function useTaskPageSourceAvailabilityPrelude(model: TaskPageRuntimeHosts
   const jiraTaskSourceScopeKey = jiraTaskSourceContext
     ? getTaskSourceCacheScope(jiraTaskSourceContext)
     : providerRuntimeContextKey
+  // Why: Task 5 produces the connected-sites state + giteaConnected flag from
+  // settings metadata (tokens stay in the secret store); Task 6 consumes them
+  // for the Gitea issues surface. First site wins until site selection lands.
+  const giteaSites = useMemo(() => settings?.giteaSites ?? [], [settings?.giteaSites])
+  const giteaConnected = giteaSites.length > 0
+  const giteaTaskSourceContext = useMemo(
+    () =>
+      normalizeTaskSourceContext({
+        provider: 'gitea',
+        projectId: fallbackTaskSourceProjectId,
+        hostId: accountBackedTaskSourceHostId,
+        providerIdentity: {
+          provider: 'gitea',
+          siteId: giteaSites[0]?.id ?? null,
+          baseUrl: giteaSites[0]?.baseUrl ?? null
+        },
+        accountLabel: giteaSites[0]?.account ?? giteaSites[0]?.baseUrl ?? null
+      }),
+    [accountBackedTaskSourceHostId, fallbackTaskSourceProjectId, giteaSites]
+  )
+  const giteaTaskSourceScopeKey = giteaTaskSourceContext
+    ? getTaskSourceCacheScope(giteaTaskSourceContext)
+    : providerRuntimeContextKey
   const accountBackedTaskSourceHostAvailability = useMemo<TaskSourceHostAvailability[]>(() => {
-    if (taskSource !== 'linear' && taskSource !== 'jira') {
+    if (taskSource !== 'linear' && taskSource !== 'jira' && taskSource !== 'gitea') {
       return []
     }
     const host = hostRegistryById.get(accountBackedTaskSourceHostId)
@@ -155,6 +179,10 @@ export function useTaskPageSourceAvailabilityPrelude(model: TaskPageRuntimeHosts
     linearListInvalidationVersionForSource: typeof linearListInvalidationVersionForSource
     jiraTaskSourceContext: typeof jiraTaskSourceContext
     jiraTaskSourceScopeKey: typeof jiraTaskSourceScopeKey
+    giteaSites: typeof giteaSites
+    giteaConnected: typeof giteaConnected
+    giteaTaskSourceContext: typeof giteaTaskSourceContext
+    giteaTaskSourceScopeKey: typeof giteaTaskSourceScopeKey
     accountBackedTaskSourceHostAvailability: typeof accountBackedTaskSourceHostAvailability
   }
   nextModel.getTaskPickerRepoHostLabel = getTaskPickerRepoHostLabel
@@ -165,6 +193,10 @@ export function useTaskPageSourceAvailabilityPrelude(model: TaskPageRuntimeHosts
   nextModel.linearListInvalidationVersionForSource = linearListInvalidationVersionForSource
   nextModel.jiraTaskSourceContext = jiraTaskSourceContext
   nextModel.jiraTaskSourceScopeKey = jiraTaskSourceScopeKey
+  nextModel.giteaSites = giteaSites
+  nextModel.giteaConnected = giteaConnected
+  nextModel.giteaTaskSourceContext = giteaTaskSourceContext
+  nextModel.giteaTaskSourceScopeKey = giteaTaskSourceScopeKey
   nextModel.accountBackedTaskSourceHostAvailability = accountBackedTaskSourceHostAvailability
   return nextModel
 }

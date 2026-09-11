@@ -63,10 +63,15 @@ export function getJiraIssueWorkspaceSeed(issue: JiraIssue): string {
     })?.seedName ?? getLinkedWorkItemSuggestedName(issue)
   )
 }
+export type GiteaProjectRef = {
+  siteId?: string | null
+  baseUrl?: string | null
+}
 export function getTaskPageRepoSourceContext(
   repo: Repo | null | undefined,
-  provider: 'github' | 'gitlab',
-  gitlabProjectRef?: GitLabProjectRef | null
+  provider: 'github' | 'gitlab' | 'gitea',
+  gitlabProjectRef?: GitLabProjectRef | null,
+  giteaProjectRef?: GiteaProjectRef | null
 ): TaskSourceContext | null {
   if (!repo) {
     return null
@@ -79,7 +84,9 @@ export function getTaskPageRepoSourceContext(
       ? project.providerIdentity
       : provider === 'gitlab' && gitlabProjectRef
         ? buildGitLabProviderIdentity(gitlabProjectRef)
-        : null
+        : provider === 'gitea' && giteaProjectRef
+          ? buildGiteaProviderIdentity(giteaProjectRef)
+          : null
   return normalizeTaskSourceContext({
     provider,
     projectId: setup?.projectId ?? project?.id ?? repo.id,
@@ -102,6 +109,13 @@ export function buildGitLabProviderIdentity(projectRef: GitLabProjectRef) {
     namespace,
     project: projectName,
     webUrl: `https://${projectRef.host}/${projectRef.path}`
+  }
+}
+export function buildGiteaProviderIdentity(projectRef: GiteaProjectRef) {
+  return {
+    provider: 'gitea' as const,
+    siteId: projectRef.siteId ?? null,
+    baseUrl: projectRef.baseUrl ?? null
   }
 }
 export function getTaskSourceHostAvailabilityForHost(

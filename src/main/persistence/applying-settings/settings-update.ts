@@ -11,6 +11,7 @@ import { normalizeTerminalCursorStyleDefault } from '../../../shared/terminal-cu
 import { normalizeDesktopTerminalScrollbackRows } from '../../../shared/terminal-scrollback-policy'
 import { normalizeTerminalMinimumContrastRatio } from '../../../shared/terminal-minimum-contrast-settings'
 import { normalizeTaskProviderSettings } from '../../../shared/task-providers'
+import { normalizeGiteaSites } from '../../../shared/gitea-types'
 import { normalizeOpenInApplications } from '../../../shared/open-in-applications'
 import { normalizeTerminalShortcutPolicy } from '../../../shared/keybindings'
 import { normalizeSourceControlGroupOrder } from '../../../shared/source-control-group-order'
@@ -159,6 +160,11 @@ export function updateSettings(
   }
   if ('openInApplications' in updates) {
     sanitizedUpdates.openInApplications = normalizeOpenInApplications(updates.openInApplications)
+  }
+  // Why: site rows are metadata only — normalize drops anything that is not
+  // {id, baseUrl, account} so a token can never persist via settings writes.
+  if ('giteaSites' in updates) {
+    sanitizedUpdates.giteaSites = normalizeGiteaSites(updates.giteaSites)
   }
   if ('terminalShortcutPolicy' in updates) {
     sanitizedUpdates.terminalShortcutPolicy = normalizeTerminalShortcutPolicy(

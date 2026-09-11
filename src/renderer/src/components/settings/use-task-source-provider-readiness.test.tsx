@@ -45,7 +45,7 @@ vi.mock('@/hooks/useInstalledAgentSkills', () => ({
   useInstalledAgentSkillNames: () => mocks.skill
 }))
 
-const ALL_PROVIDERS: readonly TaskProvider[] = ['github', 'gitlab', 'linear', 'jira']
+const ALL_PROVIDERS: readonly TaskProvider[] = ['github', 'gitlab', 'linear', 'jira', 'gitea']
 
 let root: Root | null = null
 let container: HTMLDivElement | null = null
@@ -122,6 +122,25 @@ describe('useTaskSourceProviderReadiness', () => {
       skillInstalled: true,
       skillChecking: false
     })
+    expect(latest?.gitea).toMatchObject({ connected: false, checking: false })
+  })
+
+  it('holds gitea checking until the sibling provider checks settle', async () => {
+    mocks.state.preflightStatusLoading = true
+
+    await renderProbe()
+
+    expect(latest?.gitea).toMatchObject({ connected: false, checking: true })
+  })
+
+  it('reports gitea connected from settings site metadata without a status check', async () => {
+    mocks.state.settings = {
+      giteaSites: [{ id: 's1', baseUrl: 'https://git.example.com/api/v1', account: 'ada' }]
+    }
+
+    await renderProbe()
+
+    expect(latest?.gitea).toMatchObject({ connected: true, checking: false, visible: true })
   })
 
   it('does not read code-host connection facts out of a failed preflight snapshot', async () => {
@@ -160,6 +179,7 @@ describe('useTaskSourceProviderReadiness', () => {
     expect(latest?.linear.visible).toBe(true)
     expect(latest?.gitlab.visible).toBe(false)
     expect(latest?.jira.visible).toBe(false)
+    expect(latest?.gitea.visible).toBe(false)
   })
 
   it('recomputes visibility when the provider list changes', async () => {
