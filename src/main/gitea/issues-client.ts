@@ -41,6 +41,8 @@ export type GiteaIssueListOptions = {
   state?: 'open' | 'closed' | 'all'
   labels?: string[]
   milestone?: string | number
+  /** Username for the `assigned_by` filter (the "@me" alias is resolved to the stored site account in the IPC handler). */
+  assignedBy?: string
   page?: number
   limit?: number
 }
@@ -166,9 +168,15 @@ export async function listGiteaIssues(
     ? Math.max(1, Math.trunc(opts.limit as number))
     : ISSUE_PAGE_LIMIT
   const searchParams: Record<string, string | number> = {
+    // Why: the repo endpoint shares the issue/PR number space — `type=issues`
+    // excludes pulls server-side (the `isGiteaIssue` guard stays as belt-and-braces).
+    type: 'issues',
     state: opts.state ?? 'open',
     page,
     limit
+  }
+  if (opts.assignedBy && opts.assignedBy.trim()) {
+    searchParams.assigned_by = opts.assignedBy.trim()
   }
   if (opts.labels && opts.labels.length > 0) {
     searchParams.labels = opts.labels.join(',')

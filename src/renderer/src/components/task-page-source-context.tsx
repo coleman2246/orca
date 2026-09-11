@@ -28,9 +28,10 @@ export function isGitLabIssueFilter(
   return value === 'opened' || value === 'assigned-to-me'
 }
 // Why: Gitea speaks its own issue states (GiteaWorkItem.state is
-// 'open' | 'closed'); the loading hook maps 'open' to the Task 4
-// `listIssues` 'opened' spelling at the call site.
-export type GiteaTaskFilter = 'open' | 'closed' | 'all'
+// 'open' | 'closed'); the loading hook maps 'open'/'assigned-to-me' to the
+// Task 4 `listIssues` 'opened' spelling at the call site. 'assigned-to-me'
+// mirrors the GitLab issue filter — same dropdown value, `assignee: '@me'`.
+export type GiteaTaskFilter = 'open' | 'closed' | 'all' | 'assigned-to-me'
 export const TASK_SEARCH_DEBOUNCE_MS = 300
 export const LINEAR_ITEM_LIMIT = 36
 export const JIRA_ITEM_LIMIT = 50

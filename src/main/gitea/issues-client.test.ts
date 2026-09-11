@@ -70,6 +70,8 @@ describe('Gitea issues client', () => {
     expect(listUrl.pathname).toBe('/api/v1/repos/o/r/issues')
     expect(listUrl.searchParams.get('state')).toBe('open')
     expect(listUrl.searchParams.get('limit')).toBe('50')
+    expect(listUrl.searchParams.get('type')).toBe('issues')
+    expect(listUrl.searchParams.has('assigned_by')).toBe(false)
     const headers = fetchMock.mock.calls[0]?.[1]?.headers as Record<string, string>
     expect(headers.Authorization).toBe('token tok-test')
   })
@@ -101,6 +103,21 @@ describe('Gitea issues client', () => {
     )
 
     await expect(getGiteaIssue(auth, repo, 99)).resolves.toBeNull()
+  })
+
+  it('sends assigned_by when an assignee filter is given', async () => {
+    const { listGiteaIssues } = await import('./issues-client')
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) =>
+      Response.json([giteaIssue(42)])
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await listGiteaIssues(auth, repo, { assignedBy: 'ada' })
+
+    expect(result.items).toHaveLength(1)
+    const listUrl = new URL(String(fetchMock.mock.calls[0]?.[0]))
+    expect(listUrl.searchParams.get('assigned_by')).toBe('ada')
+    expect(listUrl.searchParams.get('type')).toBe('issues')
   })
 
   it('creates, updates, and comments on issues against the expected endpoints', async () => {

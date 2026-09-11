@@ -19,6 +19,7 @@ export const giteaApi = {
   listIssues: (
     args: GiteaRepoSelectorArgs & {
       state?: 'opened' | 'closed' | 'all'
+      assignee?: string
       limit?: number
       page?: number
     }

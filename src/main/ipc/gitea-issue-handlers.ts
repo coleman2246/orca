@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import type { GiteaIssueUpdatePatch, GiteaWorkItem } from '../../shared/gitea-types'
+import type { GiteaIssueUpdatePatch, GiteaSite, GiteaWorkItem } from '../../shared/gitea-types'
 import type { Repo } from '../../shared/repo-types'
 import type { Store } from '../persistence'
 import {
@@ -33,6 +33,8 @@ type GiteaCallContext = {
   auth: GiteaCallAuth
   ref: GiteaRepoRef
   siteId: string
+  /** Stored site (null for env/anonymous) — supplies the account for '@me'. */
+  site: GiteaSite | null
 }
 
 // Why: every issue channel needs the same repo → remote ref → site/auth
@@ -55,7 +57,7 @@ async function resolveCallContext(
   const site = getGiteaSiteForRepo(ref)
   const resolved = resolveGiteaAuth(ref)
   const callSite = site ?? { id: giteaSiteId ?? resolved.baseUrl, baseUrl: resolved.baseUrl }
-  return { auth: { site: callSite, token: resolved.token }, ref, siteId: callSite.id }
+  return { auth: { site: callSite, token: resolved.token }, ref, siteId: callSite.id, site }
 }
 
 function toErrorMessage(error: unknown): string {
@@ -81,12 +83,13 @@ export function registerGiteaIssueHandlers(store: Store): void {
       _event,
       args: GiteaRepoSelectorArgs & {
         state?: 'opened' | 'closed' | 'all'
+        assignee?: string
         limit?: number
         page?: number
       }
     ) => {
       const repo = assertRegisteredRepo(args, store)
-      const { state, limit, page } = normalizeGiteaIssueListArgs(args)
+      const { state, assignee, limit, page } = normalizeGiteaIssueListArgs(args)
       const context = await resolveCallContext(store, repo, giteaSiteIdFromArgs(args))
       if (!context) {
         return {
@@ -98,7 +101,17 @@ export function registerGiteaIssueHandlers(store: Store): void {
           }
         }
       }
-      const result = await listGiteaIssues(context.auth, context.ref, { state, page, limit })
+      const result = await listGiteaIssues(context.auth, context.ref, {
+        state,
+        page,
+        limit,
+        // Why: Gitea's `assigned_by` takes a username — '@me' resolves to the
+        // stored site's account; omit when unknown (anonymous/env without a
+        // stored site) instead of filtering on garbage.
+        ...(assignee === '@me' && context.site?.account?.trim()
+          ? { assignedBy: context.site.account.trim() }
+          : {})
+      })
       // Why: Tasks page expects GiteaWorkItem[] so it can share row
       // rendering across providers. Map IssueInfo → WorkItem here so the
       // renderer doesn't need a separate code path.

@@ -30,15 +30,16 @@ function renderGiteaLoadingHook(args: {
   taskSource?: string
   giteaConnected?: boolean
   repos?: { id: string; path: string }[]
-  filter?: 'open' | 'closed' | 'all'
+  filter?: 'open' | 'closed' | 'all' | 'assigned-to-me'
   page?: number
   refreshNonce?: number
 }) {
   ;(window as unknown as { api: unknown }).api = {
     gitea: { listIssues: args.listIssues }
   }
+  const setGiteaPage = vi.fn()
   const selectedRepos = (args.repos ?? [{ id: 'r1', path: '/workspace/repo' }]) as never
-  return renderHook(
+  const view = renderHook(
     ({ page, filter, refreshNonce }) => {
       const [giteaItems, setGiteaItems] = useState<GiteaWorkItem[]>([])
       const [giteaLoading, setGiteaLoading] = useState(false)
@@ -53,7 +54,8 @@ function renderGiteaLoadingHook(args: {
         giteaRefreshNonce: refreshNonce,
         setGiteaItems,
         setGiteaLoading,
-        setGiteaError
+        setGiteaError,
+        setGiteaPage
       } as unknown as TaskPageGitLabLoadingModel
       useTaskPageGiteaLoading(model)
       return { giteaItems, giteaLoading, giteaError }
@@ -66,6 +68,7 @@ function renderGiteaLoadingHook(args: {
       }
     }
   )
+  return { view, setGiteaPage }
 }
 
 describe('useTaskPageGiteaLoading', () => {
@@ -89,7 +92,7 @@ describe('useTaskPageGiteaLoading', () => {
     const listIssues = vi.fn(async (query: { page?: number }) =>
       query.page === 2 ? { items: page2, totalPages: 2 } : { items: page1, totalPages: 2 }
     )
-    const view = renderGiteaLoadingHook({ listIssues })
+    const { view } = renderGiteaLoadingHook({ listIssues })
 
     await waitFor(() => expect(view.result.current.giteaItems).toHaveLength(2))
     expect(view.result.current.giteaItems.map((item) => item.number)).toEqual([2, 1])
@@ -117,7 +120,7 @@ describe('useTaskPageGiteaLoading', () => {
       totalPages: 0,
       error: { type: 'permission_denied', message: 'Unauthorized (HTTP 401)' }
     }))
-    const view = renderGiteaLoadingHook({ listIssues })
+    const { view } = renderGiteaLoadingHook({ listIssues })
 
     await waitFor(() => expect(view.result.current.giteaError).toBe('Unauthorized (HTTP 401)'))
     expect(view.result.current.giteaItems).toEqual([])
@@ -129,7 +132,7 @@ describe('useTaskPageGiteaLoading', () => {
       items: [workItem({ number: 1 })],
       totalPages: 1
     }))
-    const view = renderGiteaLoadingHook({ listIssues })
+    const { view } = renderGiteaLoadingHook({ listIssues })
 
     await waitFor(() => expect(view.result.current.giteaItems).toHaveLength(1))
     expect(listIssues).toHaveBeenCalledTimes(1)
@@ -139,5 +142,58 @@ describe('useTaskPageGiteaLoading', () => {
     })
     await act(async () => {})
     expect(listIssues).toHaveBeenCalledTimes(1)
+  })
+
+  it('passes assignee @me for the assigned-to-me filter', async () => {
+    const mine = [workItem({ number: 7 })]
+    const listIssues = vi.fn(async (query: { assignee?: string }) =>
+      query.assignee === '@me' ? { items: mine, totalPages: 1 } : { items: [], totalPages: 0 }
+    )
+    const { view } = renderGiteaLoadingHook({ listIssues })
+
+    await waitFor(() => expect(listIssues).toHaveBeenCalled())
+    expect(listIssues).toHaveBeenLastCalledWith(
+      expect.objectContaining({ state: 'opened', page: 1 })
+    )
+    expect(listIssues.mock.calls[0]?.[0]).not.toHaveProperty('assignee')
+
+    act(() => {
+      view.rerender({ page: 0, filter: 'assigned-to-me', refreshNonce: 0 })
+    })
+    await waitFor(() => expect(view.result.current.giteaItems).toHaveLength(1))
+    expect(listIssues).toHaveBeenLastCalledWith(
+      expect.objectContaining({ state: 'opened', assignee: '@me', page: 1 })
+    )
+    expect(view.result.current.giteaItems.map((item) => item.number)).toEqual([7])
+  })
+
+  it('replaces items from page 1 when the filter changes mid-pagination', async () => {
+    const byStateAndPage: Record<string, GiteaWorkItem[]> = {
+      'opened:1': [workItem({ number: 1 }), workItem({ number: 2 })],
+      'opened:2': [workItem({ number: 3 })],
+      'closed:1': [workItem({ number: 9, state: 'closed' })]
+    }
+    const listIssues = vi.fn(async (query: { state?: string; page?: number }) => ({
+      items: byStateAndPage[`${query.state}:${query.page}`] ?? [],
+      totalPages: 2
+    }))
+    const { view, setGiteaPage } = renderGiteaLoadingHook({ listIssues })
+
+    await waitFor(() => expect(view.result.current.giteaItems).toHaveLength(2))
+    act(() => {
+      view.rerender({ page: 1, filter: 'open', refreshNonce: 0 })
+    })
+    await waitFor(() => expect(view.result.current.giteaItems).toHaveLength(3))
+
+    act(() => {
+      view.rerender({ page: 1, filter: 'closed', refreshNonce: 0 })
+    })
+    await waitFor(() =>
+      expect(view.result.current.giteaItems.map((item) => item.number)).toEqual([9])
+    )
+    expect(listIssues).toHaveBeenLastCalledWith(
+      expect.objectContaining({ state: 'closed', page: 1 })
+    )
+    expect(setGiteaPage).toHaveBeenCalledWith(0)
   })
 })

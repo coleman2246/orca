@@ -115,8 +115,8 @@ export function useTaskPageProviderState(model: TaskPageSourceAvailabilityModel)
   const [giteaError, setGiteaError] = useState<string | null>(null)
   const [giteaRefreshNonce, setGiteaRefreshNonce] = useState(0)
   // Why: 0-based UI page (the loading hook maps it onto Gitea's 1-based
-  // pages); filter changes must reset it to 0 in the same batch so the
-  // effect replaces instead of appending.
+  // pages); the hook also resets it to 0 on a generation change, but filter
+  // controls should still reset in the same batch to avoid a transient fetch.
   const [giteaPage, setGiteaPage] = useState(0)
   // Why: separate from giteaItems so the dialog target survives a list refresh that removes the item from the visible filter (Task 7 entry point).
   const [giteaDialogItem, setGiteaDialogItem] = useState<GiteaWorkItem | null>(null)

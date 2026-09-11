@@ -160,6 +160,53 @@ describe('Gitea IPC handlers', () => {
     })
   })
 
+  it('passes assignedBy from the stored site account for assignee @me', async () => {
+    listGiteaIssuesMock.mockResolvedValueOnce({ items: [], totalPages: 0 })
+    getGiteaSiteForRepoMock.mockReturnValueOnce({ ...site, account: 'ada' })
+    registerGiteaIssueHandlers(storeWithRepos([repo()]) as Store)
+
+    await ipcHandlers.get('gitea:listIssues')?.(null, {
+      repoPath: '/local/orca',
+      state: 'opened',
+      assignee: '@me',
+      page: 1
+    })
+
+    expect(listGiteaIssuesMock).toHaveBeenCalledWith(
+      expect.objectContaining({ token: 'token-1' }),
+      repoRef,
+      {
+        state: 'open',
+        page: 1,
+        limit: 20,
+        assignedBy: 'ada'
+      }
+    )
+  })
+
+  it('omits assignedBy when no stored account is known', async () => {
+    listGiteaIssuesMock.mockResolvedValueOnce({ items: [], totalPages: 0 })
+    getGiteaSiteForRepoMock.mockReturnValueOnce(null)
+    registerGiteaIssueHandlers(storeWithRepos([repo()]) as Store)
+
+    await ipcHandlers.get('gitea:listIssues')?.(null, {
+      repoPath: '/local/orca',
+      state: 'opened',
+      assignee: '@me',
+      page: 1
+    })
+
+    expect(listGiteaIssuesMock).toHaveBeenCalledWith(
+      expect.objectContaining({ token: 'token-1' }),
+      repoRef,
+      {
+        state: 'open',
+        page: 1,
+        limit: 20
+      }
+    )
+  })
+
   it('rejects unregistered repository paths', async () => {
     registerGiteaIssueHandlers(storeWithRepos([repo()]) as Store)
 

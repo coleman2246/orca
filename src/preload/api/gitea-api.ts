@@ -26,6 +26,8 @@ export type GiteaApi = {
   listIssues: (
     args: GiteaRepoSelectorArgs & {
       state?: 'opened' | 'closed' | 'all'
+      /** '@me' resolves to the stored site's account in main; omitted when unknown. */
+      assignee?: string
       limit?: number
       page?: number
     }
