@@ -41,7 +41,9 @@ describe('Gitea issues client', () => {
   it('sends the passed per-site token instead of reading env', async () => {
     const { listGiteaIssues } = await import('./issues-client')
     process.env.ORCA_GITEA_TOKEN = 'env-token-should-be-ignored'
-    const fetchMock = vi.fn(async () => Response.json([giteaIssue(42)]))
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) =>
+      Response.json([giteaIssue(42)])
+    )
     vi.stubGlobal('fetch', fetchMock)
 
     const result = await listGiteaIssues(auth, repo)
@@ -53,7 +55,7 @@ describe('Gitea issues client', () => {
 
   it('lists issues with the expected query and filters PR entries', async () => {
     const { listGiteaIssues } = await import('./issues-client')
-    const fetchMock = vi.fn(async () =>
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) =>
       Response.json([giteaIssue(42), { ...giteaIssue(43), pull_request: { merged: false } }])
     )
     vi.stubGlobal('fetch', fetchMock)
