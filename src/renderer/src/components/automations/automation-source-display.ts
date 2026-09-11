@@ -60,6 +60,11 @@ function getSourceIdentityLabel(sourceContext: TaskSourceContext): string | null
         return identity.workspaceName ?? identity.workspaceId ?? null
       case 'jira':
         return identity.siteUrl ?? identity.siteId ?? null
+      // Why: a Gitea site has no namespace/project pair to name, so the host is
+      // the only identity worth showing; fall through to the account/repo label
+      // when the site was stored without one.
+      case 'gitea':
+        return identity.baseUrl ?? identity.siteId ?? null
     }
   }
   return sourceContext.accountLabel ?? sourceContext.repoId ?? null
