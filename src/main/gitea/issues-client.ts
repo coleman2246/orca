@@ -17,6 +17,14 @@ export class GiteaApiError extends Error {
   }
 }
 
+// Why: multi-host Tasks calls resolve the per-site credential in Task 3's
+// resolveGiteaAuth and thread it here — this client never reads env itself.
+// The token is the already-resolved credential, never persisted.
+export type GiteaCallAuth = {
+  site: GiteaSite
+  token: string | null
+}
+
 export type GiteaIssueListResult = {
   items: GiteaIssueInfo[]
   /** 0 when the listing failed — the caller keeps its current pager instead of collapsing it. */
@@ -72,13 +80,7 @@ type RequestOptions = {
   body?: unknown
 }
 
-function envValue(name: string): string | null {
-  const value = process.env[name]?.trim() ?? ''
-  return value.length > 0 ? value : null
-}
-
-function authHeaders(): Record<string, string> {
-  const token = envValue('ORCA_GITEA_TOKEN')
+function authHeaders(token: string | null): Record<string, string> {
   return token ? { Authorization: `token ${token}` } : {}
 }
 
@@ -101,8 +103,7 @@ function encodedRepoPath(repo: GiteaRepoRef): string {
   return `${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}`
 }
 
-function redactToken(message: string): string {
-  const token = envValue('ORCA_GITEA_TOKEN')
+function redactToken(message: string, token: string | null): string {
   return token ? message.split(token).join('[REDACTED]') : message
 }
 
@@ -119,17 +120,17 @@ async function readErrorMessage(response: Response): Promise<string> {
 }
 
 async function requestJson<T>(
-  site: GiteaSite,
+  auth: GiteaCallAuth,
   repo: GiteaRepoRef,
   path: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const response = await fetch(apiUrl(apiBaseUrl(site, repo), path, options.searchParams), {
+  const response = await fetch(apiUrl(apiBaseUrl(auth.site, repo), path, options.searchParams), {
     ...(options.method ? { method: options.method } : {}),
     headers: {
       Accept: 'application/json',
       ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-      ...authHeaders()
+      ...authHeaders(auth.token)
     },
     ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
     signal: AbortSignal.timeout(options.timeoutMs ?? REQUEST_TIMEOUT_MS)
@@ -137,7 +138,7 @@ async function requestJson<T>(
   if (!response.ok) {
     const message = await readErrorMessage(response)
     await cancelUnreadResponseBody(response)
-    throw new GiteaApiError(redactToken(message), response.status)
+    throw new GiteaApiError(redactToken(message, auth.token), response.status)
   }
   if (response.status === 204) {
     return null as T
@@ -168,7 +169,7 @@ function mapGiteaIssueComment(raw: RawGiteaIssueComment): GiteaIssueComment {
 }
 
 export async function listGiteaIssues(
-  site: GiteaSite,
+  auth: GiteaCallAuth,
   repo: GiteaRepoRef,
   opts: GiteaIssueListOptions = {}
 ): Promise<GiteaIssueListResult> {
@@ -189,7 +190,7 @@ export async function listGiteaIssues(
   }
   try {
     const raw = await requestJson<RawGiteaIssue[]>(
-      site,
+      auth,
       repo,
       `/repos/${encodedRepoPath(repo)}/issues`,
       { searchParams }
@@ -202,13 +203,13 @@ export async function listGiteaIssues(
 }
 
 export async function getGiteaIssue(
-  site: GiteaSite,
+  auth: GiteaCallAuth,
   repo: GiteaRepoRef,
   index: number
 ): Promise<GiteaIssueInfo | null> {
   try {
     const raw = await requestJson<RawGiteaIssue>(
-      site,
+      auth,
       repo,
       `/repos/${encodedRepoPath(repo)}/issues/${encodeURIComponent(String(index))}`
     )
@@ -222,12 +223,12 @@ export async function getGiteaIssue(
 }
 
 export async function createGiteaIssue(
-  site: GiteaSite,
+  auth: GiteaCallAuth,
   repo: GiteaRepoRef,
   input: GiteaIssueCreateInput
 ): Promise<GiteaIssueInfo> {
   const raw = await requestJson<RawGiteaIssue>(
-    site,
+    auth,
     repo,
     `/repos/${encodedRepoPath(repo)}/issues`,
     {
@@ -245,13 +246,13 @@ export async function createGiteaIssue(
 }
 
 export async function updateGiteaIssue(
-  site: GiteaSite,
+  auth: GiteaCallAuth,
   repo: GiteaRepoRef,
   index: number,
   patch: GiteaIssueUpdatePatch
 ): Promise<GiteaIssueInfo> {
   const raw = await requestJson<RawGiteaIssue>(
-    site,
+    auth,
     repo,
     `/repos/${encodedRepoPath(repo)}/issues/${encodeURIComponent(String(index))}`,
     { method: 'PATCH', body: patch }
@@ -260,13 +261,13 @@ export async function updateGiteaIssue(
 }
 
 export async function addGiteaIssueComment(
-  site: GiteaSite,
+  auth: GiteaCallAuth,
   repo: GiteaRepoRef,
   index: number,
   body: string
 ): Promise<GiteaIssueComment> {
   const raw = await requestJson<RawGiteaIssueComment>(
-    site,
+    auth,
     repo,
     `/repos/${encodedRepoPath(repo)}/issues/${encodeURIComponent(String(index))}/comments`,
     { method: 'POST', body: { body } }
@@ -275,12 +276,12 @@ export async function addGiteaIssueComment(
 }
 
 export async function listGiteaIssueComments(
-  site: GiteaSite,
+  auth: GiteaCallAuth,
   repo: GiteaRepoRef,
   index: number
 ): Promise<GiteaIssueComment[]> {
   const raw = await requestJson<RawGiteaIssueComment[]>(
-    site,
+    auth,
     repo,
     `/repos/${encodedRepoPath(repo)}/issues/${encodeURIComponent(String(index))}/comments`
   )
