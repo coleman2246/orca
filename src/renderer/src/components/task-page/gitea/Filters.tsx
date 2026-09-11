@@ -6,11 +6,16 @@ import { Button } from '@/components/ui/button'
 import { LoaderCircle, RefreshCw } from 'lucide-react'
 import type { GiteaTaskFilter } from '../../task-page-source-context'
 
-const GITEA_STATE_FILTERS: { id: GiteaTaskFilter; label: string }[] = [
-  { id: 'open', label: translate('auto.components.TaskPage.606a85c774', 'Open') },
-  { id: 'closed', label: translate('auto.components.TaskPage.d09bf34db7', 'Closed') },
-  { id: 'all', label: translate('auto.components.TaskPage.c2268a9982', 'All') }
-]
+// Why: translate() must not run at module load — the i18n catalog is not
+// loaded yet, so a top-level call bakes in the English fallback for the whole
+// session. Building the list per render keeps the labels in the active locale.
+function giteaStateFilters(): { id: GiteaTaskFilter; label: string }[] {
+  return [
+    { id: 'open', label: translate('auto.components.TaskPage.606a85c774', 'Open') },
+    { id: 'closed', label: translate('auto.components.TaskPage.d09bf34db7', 'Closed') },
+    { id: 'all', label: translate('auto.components.TaskPage.c2268a9982', 'All') }
+  ]
+}
 
 export function TaskPageGiteaFilters({
   model
@@ -36,7 +41,7 @@ export function TaskPageGiteaFilters({
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <div className="flex flex-wrap gap-2">
-            {GITEA_STATE_FILTERS.map(({ id, label }) => {
+            {giteaStateFilters().map(({ id, label }) => {
               const active = giteaFilter === id
               return (
                 <button

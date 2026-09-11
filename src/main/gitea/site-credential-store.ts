@@ -1,3 +1,4 @@
+import { cancelUnreadResponseBody } from '../lib/unread-response-body'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
@@ -266,7 +267,10 @@ export async function readUserAccount(
         message = data.message
       }
     } catch {
-      // Fall through to status text.
+      // Why: a non-JSON error body leaves the stream unread, and an unread
+      // body can crash the process from inside undici (orca#8695). Cancel it
+      // before falling through to the status text.
+      await cancelUnreadResponseBody(response)
     }
     return { ok: false, error: redactToken(message, token) }
   }
