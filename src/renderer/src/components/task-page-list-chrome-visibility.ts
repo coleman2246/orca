@@ -30,5 +30,8 @@ export function shouldHideTaskPageListChrome({
       return hasJiraDetail
     case 'linear':
       return hasLinearIssueDetail || hasLinearProjectContext || hasLinearViewContext
+    case 'gitea':
+      // Why: no Gitea detail state exists until the Task 7 dialog entry lands — the list chrome always stays visible.
+      return false
   }
 }

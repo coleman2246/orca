@@ -47,6 +47,19 @@ describe('shouldHideTaskPageListChrome', () => {
     ).toBe(true)
   })
 
+  it('keeps chrome visible for gitea until the dialog entry lands', () => {
+    expect(
+      shouldHideTaskPageListChrome({
+        ...baseState,
+        taskSource: 'gitea',
+        hasGitHubDetail: true,
+        hasGitLabDetail: true,
+        hasJiraDetail: true,
+        hasLinearIssueDetail: true
+      })
+    ).toBe(false)
+  })
+
   it('keeps chrome visible when only another provider has stale detail state', () => {
     expect(
       shouldHideTaskPageListChrome({

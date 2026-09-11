@@ -5,6 +5,7 @@ import type { JiraIssue } from '../../../shared/jira-types'
 import type { Repo } from '../../../shared/repo-types'
 import { getLinkedWorkItemWorkspaceName, getLinkedWorkItemSuggestedName } from '@/lib/new-workspace'
 import {
+  type TaskProviderIdentity,
   type TaskSourceContext,
   normalizeTaskSourceContext,
   getTaskSourceCacheScope
@@ -26,6 +27,10 @@ export function isGitLabIssueFilter(
 ): value is GitLabIssueFilter {
   return value === 'opened' || value === 'assigned-to-me'
 }
+// Why: Gitea speaks its own issue states (GiteaWorkItem.state is
+// 'open' | 'closed'); the loading hook maps 'open' to the Task 4
+// `listIssues` 'opened' spelling at the call site.
+export type GiteaTaskFilter = 'open' | 'closed' | 'all'
 export const TASK_SEARCH_DEBOUNCE_MS = 300
 export const LINEAR_ITEM_LIMIT = 36
 export const JIRA_ITEM_LIMIT = 50
@@ -116,6 +121,28 @@ export function buildGiteaProviderIdentity(projectRef: GiteaProjectRef) {
     provider: 'gitea' as const,
     siteId: projectRef.siteId ?? null,
     baseUrl: projectRef.baseUrl ?? null
+  }
+}
+export function getProviderIdentityLabel(
+  identity: TaskProviderIdentity | null | undefined
+): string | null {
+  if (!identity) {
+    return null
+  }
+  switch (identity.provider) {
+    case 'github':
+      return `${identity.owner}/${identity.repo}`
+    case 'gitlab':
+      return identity.namespace && identity.project
+        ? `${identity.namespace}/${identity.project}`
+        : (identity.projectId ?? null)
+    case 'linear':
+      return identity.workspaceName ?? identity.workspaceId ?? null
+    case 'jira':
+      return identity.siteUrl ?? identity.siteId ?? null
+    case 'gitea':
+      // Why: siteId may be URL-shaped (baseUrl fallback when anonymous/env) — show it verbatim, never parse it.
+      return identity.baseUrl ?? identity.siteId ?? null
   }
 }
 export function getTaskSourceHostAvailabilityForHost(

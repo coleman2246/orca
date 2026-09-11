@@ -3,8 +3,10 @@ import { useRef, useState, useEffect, useMemo } from 'react'
 import { resolveVisibleTaskProvider } from '../../../shared/task-providers'
 import type { GitLabTaskFilter, GitLabIssueFilter } from '@/components/task-page-localized-options'
 import type { GitLabWorkItem, GitLabTodo } from '../../../shared/gitlab-types'
+import type { GiteaWorkItem } from '../../../shared/gitea-types'
 import { getRepoBackedTaskEmptyState } from '@/components/task-page-empty-state'
 import { isGitLabIssueFilter, isGitLabMRFilter } from './task-page-source-context'
+import type { GiteaTaskFilter } from './task-page-source-context'
 export function useTaskPageProviderState(model: TaskPageSourceAvailabilityModel) {
   const {
     settings,
@@ -99,6 +101,39 @@ export function useTaskPageProviderState(model: TaskPageSourceAvailabilityModel)
     }
     return gitlabItems
   }, [gitlabItems, gitlabView])
+
+  // ── Gitea task-source state ───────────────────────────────────────
+  // Why: parallel to the GitLab block — slim per-source state; the loading
+  // hook fetches directly via window.api.gitea for the selected repos.
+  // `state` goes to the server; search/label filter client-side over the
+  // fetched pages because the Task 4 IPC contract forwards no search params.
+  const [giteaFilter, setGiteaFilter] = useState<GiteaTaskFilter>('open')
+  const [giteaSearch, setGiteaSearch] = useState('')
+  const [giteaLabel, setGiteaLabel] = useState<string | null>(null)
+  const [giteaItems, setGiteaItems] = useState<GiteaWorkItem[]>([])
+  const [giteaLoading, setGiteaLoading] = useState(false)
+  const [giteaError, setGiteaError] = useState<string | null>(null)
+  const [giteaRefreshNonce, setGiteaRefreshNonce] = useState(0)
+  // Why: 0-based UI page (the loading hook maps it onto Gitea's 1-based
+  // pages); filter changes must reset it to 0 in the same batch so the
+  // effect replaces instead of appending.
+  const [giteaPage, setGiteaPage] = useState(0)
+  // Why: separate from giteaItems so the dialog target survives a list refresh that removes the item from the visible filter (Task 7 entry point).
+  const [giteaDialogItem, setGiteaDialogItem] = useState<GiteaWorkItem | null>(null)
+  // Why: siteId is never parsed here — it may be URL-shaped (baseUrl
+  // fallback when anonymous/env), so grouping keys off nothing.
+  const displayedGiteaItems = useMemo(() => {
+    const query = giteaSearch.trim().toLowerCase()
+    return giteaItems.filter((item) => {
+      if (giteaLabel && !item.labels.includes(giteaLabel)) {
+        return false
+      }
+      if (query && !item.title.toLowerCase().includes(query)) {
+        return false
+      }
+      return true
+    })
+  }, [giteaItems, giteaSearch, giteaLabel])
   const nextModel = model as typeof model & {
     taskSourceManuallyChangedRef: typeof taskSourceManuallyChangedRef
     lastPageTaskSourceRef: typeof lastPageTaskSourceRef
@@ -134,6 +169,25 @@ export function useTaskPageProviderState(model: TaskPageSourceAvailabilityModel)
     gitlabFilterIsValid: typeof gitlabFilterIsValid
     activeGitlabFilter: typeof activeGitlabFilter
     displayedGitLabItems: typeof displayedGitLabItems
+    giteaFilter: typeof giteaFilter
+    setGiteaFilter: typeof setGiteaFilter
+    giteaSearch: typeof giteaSearch
+    setGiteaSearch: typeof setGiteaSearch
+    giteaLabel: typeof giteaLabel
+    setGiteaLabel: typeof setGiteaLabel
+    giteaItems: typeof giteaItems
+    setGiteaItems: typeof setGiteaItems
+    giteaLoading: typeof giteaLoading
+    setGiteaLoading: typeof setGiteaLoading
+    giteaError: typeof giteaError
+    setGiteaError: typeof setGiteaError
+    giteaRefreshNonce: typeof giteaRefreshNonce
+    setGiteaRefreshNonce: typeof setGiteaRefreshNonce
+    giteaPage: typeof giteaPage
+    setGiteaPage: typeof setGiteaPage
+    giteaDialogItem: typeof giteaDialogItem
+    setGiteaDialogItem: typeof setGiteaDialogItem
+    displayedGiteaItems: typeof displayedGiteaItems
   }
   nextModel.taskSourceManuallyChangedRef = taskSourceManuallyChangedRef
   nextModel.lastPageTaskSourceRef = lastPageTaskSourceRef
@@ -169,6 +223,25 @@ export function useTaskPageProviderState(model: TaskPageSourceAvailabilityModel)
   nextModel.gitlabFilterIsValid = gitlabFilterIsValid
   nextModel.activeGitlabFilter = activeGitlabFilter
   nextModel.displayedGitLabItems = displayedGitLabItems
+  nextModel.giteaFilter = giteaFilter
+  nextModel.setGiteaFilter = setGiteaFilter
+  nextModel.giteaSearch = giteaSearch
+  nextModel.setGiteaSearch = setGiteaSearch
+  nextModel.giteaLabel = giteaLabel
+  nextModel.setGiteaLabel = setGiteaLabel
+  nextModel.giteaItems = giteaItems
+  nextModel.setGiteaItems = setGiteaItems
+  nextModel.giteaLoading = giteaLoading
+  nextModel.setGiteaLoading = setGiteaLoading
+  nextModel.giteaError = giteaError
+  nextModel.setGiteaError = setGiteaError
+  nextModel.giteaRefreshNonce = giteaRefreshNonce
+  nextModel.setGiteaRefreshNonce = setGiteaRefreshNonce
+  nextModel.giteaPage = giteaPage
+  nextModel.setGiteaPage = setGiteaPage
+  nextModel.giteaDialogItem = giteaDialogItem
+  nextModel.setGiteaDialogItem = setGiteaDialogItem
+  nextModel.displayedGiteaItems = displayedGiteaItems
   return nextModel
 }
 export type TaskPageProviderStateModel = ReturnType<typeof useTaskPageProviderState>
