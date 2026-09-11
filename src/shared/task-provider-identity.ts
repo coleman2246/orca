@@ -29,11 +29,18 @@ export type JiraTaskProviderIdentity = {
   projectKey?: string | null
 }
 
+export type GiteaTaskProviderIdentity = {
+  provider: 'gitea'
+  siteId?: string | null
+  baseUrl?: string | null
+}
+
 export type TaskProviderIdentity =
   | GitHubTaskProviderIdentity
   | GitLabTaskProviderIdentity
   | LinearTaskProviderIdentity
   | JiraTaskProviderIdentity
+  | GiteaTaskProviderIdentity
 
 export function normalizeTaskProviderIdentity(
   provider: TaskProvider,
@@ -79,6 +86,12 @@ export function normalizeTaskProviderIdentity(
         siteUrl: normalizeNonEmptyString(raw.siteUrl),
         projectKey: normalizeNonEmptyString(raw.projectKey)
       }
+    case 'gitea':
+      return {
+        provider,
+        siteId: normalizeNonEmptyString(raw.siteId),
+        baseUrl: normalizeNonEmptyString(raw.baseUrl)
+      }
   }
 }
 
@@ -112,6 +125,8 @@ export function isStoredTaskProviderIdentity(provider: TaskProvider, identity: u
       )
     case 'jira':
       return ['siteId', 'siteUrl', 'projectKey'].every((key) => isNullableOptionalString(raw[key]))
+    case 'gitea':
+      return ['siteId', 'baseUrl'].every((key) => isNullableOptionalString(raw[key]))
   }
 }
 
@@ -119,7 +134,8 @@ const TASK_PROVIDER_IDENTITY_FIELDS: Record<TaskProvider, readonly string[]> = {
   github: ['owner', 'repo', 'host'],
   gitlab: ['projectId', 'namespace', 'project', 'webUrl'],
   linear: ['workspaceId', 'workspaceName', 'teamId', 'teamKey'],
-  jira: ['siteId', 'siteUrl', 'projectKey']
+  jira: ['siteId', 'siteUrl', 'projectKey'],
+  gitea: ['siteId', 'baseUrl']
 }
 
 export function areTaskProviderIdentitiesEqual(
@@ -157,6 +173,8 @@ export function taskProviderIdentityCachePart(
       return [identity.workspaceId, identity.teamId ?? identity.teamKey].filter(Boolean).join('/')
     case 'jira':
       return [identity.siteId ?? identity.siteUrl, identity.projectKey].filter(Boolean).join('/')
+    case 'gitea':
+      return [identity.siteId ?? identity.baseUrl].filter(Boolean).join('/')
   }
 }
 
