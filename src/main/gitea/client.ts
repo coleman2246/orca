@@ -84,14 +84,14 @@ async function requestJsonAtBase<T>(
   // Why: the existing-review lookup behind Create must distinguish a real
   // transport/auth failure from an accepted "no PR". When true, a failed request
   // throws instead of collapsing to null so callers never report false not_found.
-  throwOnFailure = false
+  throwOnFailure = false,
+  siteToken: string | null = getAuthConfig().token
 ): Promise<T | null> {
-  const config = getAuthConfig()
   try {
     const response = await fetch(apiUrl(baseUrl, path, options.searchParams), {
       headers: {
         Accept: 'application/json',
-        ...authHeaders(config)
+        ...authHeaders({ token: siteToken })
       },
       signal: AbortSignal.timeout(options.timeoutMs ?? REQUEST_TIMEOUT_MS)
     })
@@ -118,6 +118,18 @@ function requestJson<T>(
   throwOnFailure = false
 ): Promise<T | null> {
   return requestJsonAtBase(configuredApiBaseUrl(repo), path, options, throwOnFailure)
+}
+
+// Why: Tasks calls resolve a per-site token via resolveGiteaAuth and thread it
+// here explicitly — this path never reads env. Reads use the default
+// swallowing behavior; strict throwing lookups stay in issues-client.
+export function requestJsonWithAuth<T>(
+  repo: GiteaRepoRef,
+  siteToken: string | null,
+  path: string,
+  options: RequestOptions = {}
+): Promise<T | null> {
+  return requestJsonAtBase(repo.apiBaseUrl, path, options, false, siteToken)
 }
 
 function encodedRepoPath(repo: GiteaRepoRef): string {
