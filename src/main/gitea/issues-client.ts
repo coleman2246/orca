@@ -1,5 +1,10 @@
 import type { ClassifiedError } from '../../shared/classified-error'
-import type { GiteaIssueInfo, GiteaSite } from '../../shared/gitea-types'
+import type {
+  GiteaIssueComment,
+  GiteaIssueInfo,
+  GiteaIssueUpdatePatch,
+  GiteaSite
+} from '../../shared/gitea-types'
 import { normalizeGiteaApiBaseUrl } from './client'
 import { cancelUnreadResponseBody } from '../lib/unread-response-body'
 import { isGiteaIssue, mapGiteaIssue, type RawGiteaIssue } from './issue-mappers'
@@ -46,23 +51,6 @@ export type GiteaIssueCreateInput = {
   labels?: string[]
   assignees?: string[]
   milestone?: string | number
-}
-
-export type GiteaIssueUpdatePatch = {
-  title?: string
-  body?: string
-  state?: 'open' | 'closed'
-  labels?: string[]
-  assignees?: string[]
-  milestone?: string | number
-}
-
-export type GiteaIssueComment = {
-  id: number
-  body: string
-  author: string
-  createdAt: string
-  url: string
 }
 
 type RawGiteaIssueComment = {

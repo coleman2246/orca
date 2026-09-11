@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { isTaskProvider, TASK_PROVIDERS } from './task-providers'
-import { normalizeGiteaSite } from './gitea-types'
+import { normalizeGiteaSite, type GiteaConnectionStatus } from './gitea-types'
 
 describe('gitea provider registry', () => {
   it('registers gitea as a task provider', () => {
@@ -12,5 +12,10 @@ describe('gitea provider registry', () => {
     expect(normalizeGiteaSite({ baseUrl: 'https://git.example.com/' }).baseUrl).toBe(
       'https://git.example.com/api/v1'
     )
+  })
+
+  it('carries the optional authSource env-deprecation hint on connection status', () => {
+    const status: GiteaConnectionStatus = { connected: false, authSource: 'anonymous' }
+    expect(status.authSource).toBe('anonymous')
   })
 })

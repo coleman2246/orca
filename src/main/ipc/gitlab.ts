@@ -9,6 +9,7 @@ import {
 } from '../gitlab/client'
 import { registerGitLabCiJobHandlers } from './gitlab-ci-job-handlers'
 import { registerGitLabIssueHandlers } from './gitlab-issue-handlers'
+import { registerGiteaIssueHandlers } from './gitea-issue-handlers'
 import { registerGitLabMergeRequestMutationHandlers } from './gitlab-merge-request-mutation-handlers'
 import { registerGitLabMergeRequestQueryHandlers } from './gitlab-merge-request-query-handlers'
 import type { GitLabRepoSelectorArgs } from './gitlab-repo-access'
@@ -40,6 +41,7 @@ export function registerGitLabHandlers(store: Store): void {
 
   registerGitLabMergeRequestQueryHandlers(store)
   registerGitLabIssueHandlers(store)
+  registerGiteaIssueHandlers(store)
   registerGitLabWorkItemHandlers(store)
   registerGitLabMergeRequestMutationHandlers(store)
   registerGitLabCiJobHandlers(store)
