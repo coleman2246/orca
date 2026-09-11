@@ -61,6 +61,7 @@ export function normalizeVisibleTaskProviders(value: unknown): TaskProvider[] {
 export type TaskProviderAvailability = {
   gitlabInstalled: boolean
   linearConnected: boolean
+  giteaConnected?: boolean
 }
 
 export function filterAvailableTaskProviders(
@@ -109,6 +110,11 @@ function isTaskProviderAvailable(
   // Why: Jira can be connected from the Tasks surface itself, so hiding it
   // when disconnected would remove the entry point for first-time setup.
   if (provider === 'jira') {
+    return true
+  }
+  // Why: Gitea stays visible as a setup entry while disconnected, same as
+  // Jira above — connecting happens from the Tasks surface itself.
+  if (provider === 'gitea') {
     return true
   }
   return availability.linearConnected

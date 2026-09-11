@@ -122,4 +122,13 @@ describe('task providers', () => {
       })
     ).toEqual(['github'])
   })
+
+  it('keeps gitea visible as a setup entry while disconnected', () => {
+    expect(
+      filterAvailableTaskProviders(['github', 'gitea'], {
+        gitlabInstalled: false,
+        linearConnected: false
+      })
+    ).toEqual(['github', 'gitea'])
+  })
 })
