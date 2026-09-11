@@ -3,6 +3,7 @@ import type { useAppStore } from '@/store'
 import type { parseGitHubIssueOrPRLink, RepoSlug } from '@/lib/github-links'
 import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { GitLabWorkItem } from '../../../../shared/gitlab-types'
+import type { GiteaWorkItem } from '../../../../shared/gitea-types'
 import type { JiraIssue, JiraSite } from '../../../../shared/jira-types'
 import type { LinearIssue } from '../../../../shared/linear/issue-types'
 import type { BaseRefSearchResult } from '../../../../shared/repo-types'
@@ -20,6 +21,8 @@ export type SmartWorkspaceNameFieldProps = {
   onGitHubItemSelect: (item: GitHubWorkItem) => void
   /** Optional; when omitted, GitLab paste-URL detection is silently skipped. */
   onGitLabItemSelect?: (item: GitLabWorkItem) => void
+  /** Optional; when omitted, Gitea paste-URL detection is silently skipped. */
+  onGiteaItemSelect?: (item: GiteaWorkItem) => void
   onBranchSelect: (refName: string, localBranchName: string) => void
   onLinearIssueSelect: (issue: LinearIssue) => void
   onJiraIssueSelect?: (issue: JiraIssue, sourceContext: TaskSourceContext) => void
@@ -76,6 +79,7 @@ export type RepoBackedSearchTarget = {
   repo: RepoOption
   githubSourceContext: TaskSourceContext | null
   gitlabSourceContext: TaskSourceContext | null
+  giteaSourceContext: TaskSourceContext | null
 }
 
 export type CrossRepoPrompt = {
@@ -92,6 +96,7 @@ export type SmartWorkspaceNameFieldSearchState = {
   debouncedQuery: string
   githubItems: GitHubWorkItem[]
   gitlabItems: GitLabWorkItem[]
+  giteaItems: GiteaWorkItem[]
   branches: BaseRefSearchResult[]
   branchResultsSource: { repoId: string; query: string } | null
   linearIssues: LinearIssue[]

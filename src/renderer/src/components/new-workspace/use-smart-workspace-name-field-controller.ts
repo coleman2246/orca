@@ -15,6 +15,7 @@ import { useSmartWorkspaceNameFieldActions } from './use-smart-workspace-name-fi
 import { useSmartWorkspaceNameFieldFoundation } from './use-smart-workspace-name-field-foundation'
 import { useSmartWorkspaceGithubSearch } from './use-smart-workspace-github-search'
 import { useSmartWorkspaceGitlabSearch } from './use-smart-workspace-gitlab-search'
+import { useSmartWorkspaceGiteaSearch } from './use-smart-workspace-gitea-search'
 import { useSmartWorkspaceNameFieldPresentation } from './use-smart-workspace-name-field-presentation'
 import { useSmartWorkspaceSecondarySearches } from './use-smart-workspace-secondary-searches'
 
@@ -120,6 +121,20 @@ export function useSmartWorkspaceNameFieldController({
     foundation,
     sourceQueryWithinLimit,
     shouldQueryGitlab
+  })
+  const shouldQueryGitea =
+    sourceQueryWithinLimit &&
+    !repoBackedSourcesDisabled &&
+    !foundation.jiraSource.intent &&
+    !linearUrlIntentOwnsInput &&
+    !textOnly &&
+    foundation.giteaSourceAvailable &&
+    foundation.repoBackedSearchTargets.length > 0 &&
+    foundation.mode === 'smart'
+  useSmartWorkspaceGiteaSearch({
+    foundation,
+    sourceQueryWithinLimit,
+    shouldQueryGitea
   })
   const presentation = useSmartWorkspaceNameFieldPresentation(foundation, {
     linearUrlIntent,

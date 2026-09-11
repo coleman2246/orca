@@ -6,7 +6,10 @@ import {
   SEARCH_DEBOUNCE_MS,
   type NormalizedSmartWorkspaceNameFieldProps
 } from './smart-workspace-name-field-model'
-import { canUseGitLabSmartSource } from './smart-workspace-provider-availability'
+import {
+  canUseGiteaSmartSource,
+  canUseGitLabSmartSource
+} from './smart-workspace-provider-availability'
 import { useSmartWorkspaceFieldFocusControls } from './use-smart-workspace-field-focus-controls'
 import type { useSmartWorkspaceNameFieldState } from './use-smart-workspace-name-field-state'
 
@@ -30,6 +33,7 @@ export function useSmartWorkspaceFieldAvailability({
   state: FieldState
   repoBackedSearchTargets: {
     gitlabSourceContext: { hostId?: ExecutionHostId | null } | null
+    giteaSourceContext: { hostId?: ExecutionHostId | null } | null
   }[]
   preflightStatus: { glab?: { installed?: boolean } } | null
   preflightStatusChecked: boolean
@@ -55,9 +59,11 @@ export function useSmartWorkspaceFieldAvailability({
     setOpen,
     setGithubItems,
     setGitlabItems,
+    setGiteaItems,
     setBranches,
     setGithubLoading,
     setGitlabLoading,
+    setGiteaLoading,
     setBranchesLoading,
     setBranchResultsSource,
     setCrossRepoPrompt,
@@ -79,6 +85,12 @@ export function useSmartWorkspaceFieldAvailability({
       localGitlabAvailable,
       repoBackedSourcesDisabled,
       sourceHostId: target.gitlabSourceContext?.hostId
+    })
+  )
+  const giteaSourceAvailable = repoBackedSearchTargets.some((target) =>
+    canUseGiteaSmartSource({
+      repoBackedSourcesDisabled,
+      sourceHostId: target.giteaSourceContext?.hostId
     })
   )
   const availableTaskProviders = useMemo(
@@ -211,12 +223,14 @@ export function useSmartWorkspaceFieldAvailability({
     setOpen(false)
     setGithubItems([])
     setGitlabItems([])
+    setGiteaItems([])
     setBranches([])
     setBranchResultsSource(null)
     setLinearIssues([])
     setJiraIssues([])
     setGithubLoading(false)
     setGitlabLoading(false)
+    setGiteaLoading(false)
     setBranchesLoading(false)
     setLinearLoading(false)
     setJiraLoading(false)
@@ -233,6 +247,8 @@ export function useSmartWorkspaceFieldAvailability({
     setGithubLoading,
     setGitlabItems,
     setGitlabLoading,
+    setGiteaItems,
+    setGiteaLoading,
     setJiraIssues,
     setJiraLoading,
     setLinearIssues,
@@ -247,6 +263,7 @@ export function useSmartWorkspaceFieldAvailability({
 
   return {
     gitlabSourceAvailable,
+    giteaSourceAvailable,
     linearAvailable,
     availableModes,
     mrStateFilters,

@@ -8,8 +8,14 @@ export function TaskPageGiteaDialog({
 }: {
   model: TaskPageComposerActionsModel
 }): React.JSX.Element | null {
-  const { giteaDialogItem, setGiteaDialogItem, setGiteaRefreshNonce, selectedRepos, primaryRepo } =
-    model
+  const {
+    giteaDialogItem,
+    setGiteaDialogItem,
+    setGiteaRefreshNonce,
+    selectedRepos,
+    primaryRepo,
+    handleUseGiteaItem
+  } = model
   const giteaDialogRepo = useMemo(
     () =>
       giteaDialogItem
@@ -35,6 +41,10 @@ export function TaskPageGiteaDialog({
       repoId={giteaDialogItem?.repoId ?? null}
       sourceContext={giteaDialogSourceContext}
       onMutated={() => setGiteaRefreshNonce((n) => n + 1)}
+      onCreateWorkspace={(item) => {
+        setGiteaDialogItem(null)
+        handleUseGiteaItem(item)
+      }}
       onClose={() => setGiteaDialogItem(null)}
     />
   )

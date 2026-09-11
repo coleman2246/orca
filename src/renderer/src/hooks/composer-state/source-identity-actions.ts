@@ -39,6 +39,7 @@ import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import { shouldApplyWorkspaceSourceAutoName } from '../../../../shared/new-workspace/workspace-source'
 import { isLinearLinkedWorkItem } from '@/lib/linear-linked-work-item'
 import { resolveComposerManualBranchNameChange } from '../composer-branch-selection'
+import { useApplyLinkedGiteaWorkItem } from './gitea-linked-work-item-action'
 
 export function useSourceIdentityActions(input: SourceIdentityActionsInput) {
   const {
@@ -137,6 +138,22 @@ export function useSourceIdentityActions(input: SourceIdentityActionsInput) {
       smartGitHubPrStartPointSelectionRef
     ]
   )
+
+  const applyLinkedGiteaWorkItem = useApplyLinkedGiteaWorkItem({
+    branchAutoNameRef,
+    lastAutoNameRef,
+    name,
+    setBranchNameOverride,
+    setBranchNameOverridePreservesNameEdits,
+    setLinkedGitLabIssue,
+    setLinkedGitLabMR,
+    setLinkedIssue,
+    setLinkedPR,
+    setLinkedTaskSourceContext,
+    setLinkedWorkItem,
+    setName,
+    smartGitHubPrStartPointSelectionRef
+  })
 
   const handleSelectLinkedItem = useCallback(
     (item: GitHubWorkItem): void => {
@@ -261,6 +278,7 @@ export function useSourceIdentityActions(input: SourceIdentityActionsInput) {
   )
 
   return {
+    applyLinkedGiteaWorkItem,
     applyLinkedGitLabWorkItem,
     handleSelectLinkedItem,
     handleLinkPopoverChange,

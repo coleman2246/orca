@@ -1,5 +1,6 @@
 import type { LinkedWorkItemSummary } from '@/lib/new-workspace'
 import {
+  buildGiteaWorkspaceSource,
   buildGitHubWorkspaceSource,
   buildGitLabWorkspaceSource,
   buildLinearWorkspaceSource,
@@ -20,6 +21,7 @@ import { isGitRepoKind } from '../../../../shared/repo-kind'
 import type { FolderWorkspace } from '../../../../shared/folder-workspace-types'
 import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { GitLabWorkItem } from '../../../../shared/gitlab-types'
+import type { GiteaWorkItem } from '../../../../shared/gitea-types'
 import type { LinearIssue } from '../../../../shared/linear/issue-types'
 import type { ProjectGroup } from '../../../../shared/project-group-types'
 import type { Repo } from '../../../../shared/repo-types'
@@ -93,6 +95,10 @@ export function toGitHubLinkedWorkItem(item: GitHubWorkItem): LinkedWorkItemSumm
 
 export function toGitLabLinkedWorkItem(item: GitLabWorkItem): LinkedWorkItemSummary {
   return buildGitLabWorkspaceSource(item)
+}
+
+export function toGiteaLinkedWorkItem(item: GiteaWorkItem): LinkedWorkItemSummary {
+  return buildGiteaWorkspaceSource(item)
 }
 
 export function toLinearLinkedWorkItem(issue: LinearIssue): LinkedWorkItemSummary {

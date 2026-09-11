@@ -1,6 +1,7 @@
 import type { GitLabTaskFilter, GitLabIssueFilter } from '@/components/task-page-localized-options'
 import type { GitHubWorkItem } from '../../../shared/github/work-item-types'
 import type { GitLabProjectRef, GitLabWorkItem } from '../../../shared/gitlab-types'
+import type { GiteaWorkItem } from '../../../shared/gitea-types'
 import type { JiraIssue } from '../../../shared/jira-types'
 import type { Repo } from '../../../shared/repo-types'
 import { getLinkedWorkItemWorkspaceName, getLinkedWorkItemSuggestedName } from '@/lib/new-workspace'
@@ -53,6 +54,16 @@ export function getGitLabWorkItemWorkspaceSeed(item: GitLabWorkItem): string {
     getLinkedWorkItemWorkspaceName({
       type: item.type,
       provider: 'gitlab',
+      number: item.number,
+      title: item.title
+    })?.seedName ?? getLinkedWorkItemSuggestedName(item)
+  )
+}
+export function getGiteaWorkItemWorkspaceSeed(item: GiteaWorkItem): string {
+  return (
+    getLinkedWorkItemWorkspaceName({
+      type: item.type,
+      provider: 'gitea',
       number: item.number,
       title: item.title
     })?.seedName ?? getLinkedWorkItemSuggestedName(item)

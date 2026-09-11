@@ -97,6 +97,17 @@ export function useSmartWorkspaceNameFieldFoundation(
         : null,
     [selectedRepo]
   )
+  const giteaSourceContext = useMemo(
+    () =>
+      selectedRepo
+        ? buildTaskSourceContextFromRepo({
+            provider: 'gitea',
+            projectId: selectedRepo.id,
+            repo: selectedRepo
+          })
+        : null,
+    [selectedRepo]
+  )
   const repoBackedSearchTargets = useMemo<RepoBackedSearchTarget[]>(
     () =>
       (repoBackedSearchRepos.length > 0
@@ -121,9 +132,23 @@ export function useSmartWorkspaceNameFieldFoundation(
                 provider: 'gitlab',
                 projectId: repo.id,
                 repo
+              }),
+        giteaSourceContext:
+          repo.id === selectedRepo?.id && giteaSourceContext?.provider === 'gitea'
+            ? giteaSourceContext
+            : buildTaskSourceContextFromRepo({
+                provider: 'gitea',
+                projectId: repo.id,
+                repo
               })
       })),
-    [githubSourceContext, gitlabSourceContext, repoBackedSearchRepos, selectedRepo]
+    [
+      githubSourceContext,
+      gitlabSourceContext,
+      giteaSourceContext,
+      repoBackedSearchRepos,
+      selectedRepo
+    ]
   )
   const linearSourceContext = useMemo(
     () =>

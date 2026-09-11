@@ -2,6 +2,7 @@ import type { ComposerModel } from './composer-model'
 export type ComposerSourceState = {
   sourceIdentityActions: Pick<
     ComposerModel,
+    | 'applyLinkedGiteaWorkItem'
     | 'applyLinkedGitLabWorkItem'
     | 'handleSelectLinkedItem'
     | 'handleLinkPopoverChange'
@@ -33,6 +34,7 @@ export type ComposerSourceState = {
   >
   githubProviderSelection: Pick<ComposerModel, 'handleSmartGitHubItemSelect'>
   gitlabProviderSelection: Pick<ComposerModel, 'handleSmartGitLabItemSelect'>
+  giteaProviderSelection: Pick<ComposerModel, 'handleSmartGiteaItemSelect'>
   workItemSourceActions: Pick<
     ComposerModel,
     'handleSmartBranchSelect' | 'handleReuseSelectedBranchChange'

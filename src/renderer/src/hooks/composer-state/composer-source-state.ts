@@ -8,6 +8,7 @@ import { useProjectTargetActions } from './project-target-actions'
 import { useBranchStartPointActions } from './branch-start-point-actions'
 import { useGitHubProviderSelection } from './github-provider-selection'
 import { useGitLabProviderSelection } from './gitlab-provider-selection'
+import { useComposerGiteaSelection } from './use-composer-gitea-selection'
 import { useWorkItemSourceActions } from './work-item-source-actions'
 import { useIssueSourceActions } from './issue-source-actions'
 import { useComposerNavigationActions } from './composer-navigation-actions'
@@ -213,6 +214,7 @@ export function useComposerSourceState(
     setStartFromResetHint: target.workspaceIdentityState.setStartFromResetHint,
     settings: target.composerTargetStore.settings
   })
+  const giteaProviderSelection = useComposerGiteaSelection(target, sourceIdentityActions)
   const workItemSourceActions = useWorkItemSourceActions({
     branchAutoNameRef: target.asyncComposerState.branchAutoNameRef,
     lastAutoNameRef: target.asyncComposerState.lastAutoNameRef,
@@ -286,6 +288,7 @@ export function useComposerSourceState(
     branchStartPointActions,
     githubProviderSelection,
     gitlabProviderSelection,
+    giteaProviderSelection,
     workItemSourceActions,
     issueSourceActions,
     composerNavigationActions

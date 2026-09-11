@@ -1,4 +1,5 @@
 import type { GitLabWorkItem } from '../../../../shared/gitlab-types'
+import type { GiteaWorkItem } from '../../../../shared/gitea-types'
 import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { WorktreeMeta } from '../../../../shared/worktree/meta-types'
 import type { GitPushTarget } from '../../../../shared/worktree/types'
@@ -12,6 +13,7 @@ import type { SmartWorkspaceNameSelection } from '@/components/new-workspace/Sma
 export type ComposerSourceModel = {
   addComposerAttachments: (paths: string[]) => void
   applyLinkedGitLabWorkItem: (item: GitLabWorkItem) => void
+  applyLinkedGiteaWorkItem: (item: GiteaWorkItem) => void
   applyLinkedWorkItem: (
     item: GitHubWorkItem,
     options?: { preserveBranchNameOverride?: boolean | undefined }
@@ -54,6 +56,7 @@ export type ComposerSourceModel = {
   handleSmartBranchSelect: (refName: string, localBranchName: string) => void
   handleSmartGitHubItemSelect: (item: GitHubWorkItem) => void
   handleSmartGitLabItemSelect: (item: GitLabWorkItem) => void
+  handleSmartGiteaItemSelect: (item: GiteaWorkItem) => void
   handleSmartJiraIssueSelect: (issue: JiraIssue, sourceContext: TaskSourceContext) => void
   handleSmartLinearIssueSelect: (issue: LinearIssue) => void
   handleSparseSelectPreset: (preset: SparsePreset | null) => void

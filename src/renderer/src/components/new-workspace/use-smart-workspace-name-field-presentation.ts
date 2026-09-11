@@ -21,6 +21,7 @@ import {
   isBlockingTaskUrlResolution,
   isSmartWorkspaceSourceQueryWithinLimit
 } from './smart-workspace-source-results'
+import { useSmartWorkspaceForgeUrlIntents } from './use-smart-workspace-url-intents'
 import { RESULT_LIMIT, type RowEntry } from './smart-workspace-name-field-model'
 import type { useSmartWorkspaceNameFieldFoundation } from './use-smart-workspace-name-field-foundation'
 
@@ -49,6 +50,8 @@ export function useSmartWorkspaceNameFieldPresentation(
     debouncedQuery,
     gitlabSourceAvailable,
     gitlabItems,
+    giteaSourceAvailable,
+    giteaItems,
     jiraIssues,
     linearAvailable,
     linearIssues,
@@ -60,6 +63,7 @@ export function useSmartWorkspaceNameFieldPresentation(
     emojiCommandValue,
     githubLoading,
     gitlabLoading,
+    giteaLoading,
     branchesLoading,
     linearLoading,
     jiraLoading,
@@ -78,19 +82,9 @@ export function useSmartWorkspaceNameFieldPresentation(
     settledLinearUrlQuery === linearQuery.trim() &&
     !linearLoading &&
     linearIssues.length === 0
-  const githubUrlIntent = useMemo(
-    () =>
-      isSmartWorkspaceSourceQueryWithinLimit(value) && (mode === 'smart' || mode === 'github')
-        ? parseGitHubIssueOrPRLink(value)
-        : null,
-    [mode, value]
-  )
-  const gitlabUrlIntent = useMemo(
-    () =>
-      isSmartWorkspaceSourceQueryWithinLimit(value) && (mode === 'smart' || mode === 'gitlab')
-        ? parseGitLabIssueOrMRLink(value)
-        : null,
-    [mode, value]
+  const { githubUrlIntent, gitlabUrlIntent, giteaUrlIntent } = useSmartWorkspaceForgeUrlIntents(
+    value,
+    mode
   )
   const rows = useMemo<RowEntry[]>(() => {
     if (jiraSource.intent && jiraSource.accountChoices.length > 0) {
@@ -120,6 +114,12 @@ export function useSmartWorkspaceNameFieldPresentation(
         value,
         debouncedQuery
       }),
+      giteaAvailable: giteaSourceAvailable,
+      giteaItems: getVisibleHeldProviderResults({
+        items: giteaItems,
+        value,
+        debouncedQuery
+      }),
       jiraIntent: jiraSource.intent,
       jiraIssue: jiraSource.issue,
       jiraIssues: getVisibleHeldProviderResults({
@@ -139,6 +139,7 @@ export function useSmartWorkspaceNameFieldPresentation(
       linearUrlIntentOwnsResults: true,
       githubUrlIntent,
       gitlabUrlIntent,
+      giteaUrlIntent,
       mode,
       resultLimit: RESULT_LIMIT,
       value
@@ -152,6 +153,9 @@ export function useSmartWorkspaceNameFieldPresentation(
     gitlabSourceAvailable,
     gitlabItems,
     gitlabUrlIntent,
+    giteaSourceAvailable,
+    giteaItems,
+    giteaUrlIntent,
     jiraSource.accountChoices,
     jiraSource.intent,
     jiraSource.issue,
@@ -266,9 +270,9 @@ export function useSmartWorkspaceNameFieldPresentation(
     linearLoading && linearUrlIntentOwnsInput && linearUrlLoadingFeedbackQuery === linearQuery
   const visibleLinearLoading =
     linearLoading && (!linearUrlIntentOwnsInput || showLinearUrlLoadingFeedback)
-  const loading = jiraSource.intent
-    ? jiraSource.loading
-    : githubLoading || gitlabLoading || branchesLoading || visibleLinearLoading || jiraLoading
+  const providerLoading =
+    githubLoading || gitlabLoading || giteaLoading || branchesLoading || jiraLoading
+  const loading = jiraSource.intent ? jiraSource.loading : providerLoading || visibleLinearLoading
   // Why: only spin on first load, not refreshes with retained rows.
   const showSearchSpinner = loading && searchResultRows.length === 0
   const ActiveInputIcon =

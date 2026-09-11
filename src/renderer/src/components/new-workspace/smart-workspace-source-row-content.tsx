@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { LinearIcon } from '@/components/icons/LinearIcon'
 import { JiraIcon } from '@/components/icons/JiraIcon'
+import { GiteaIcon } from '@/components/icons/GiteaIcon'
 import { cn } from '@/lib/utils'
 import { translate } from '@/i18n/i18n'
 import type { JiraSite } from '../../../../shared/jira-types'
@@ -48,6 +49,9 @@ export function RowIcon({ row }: { row: RowEntry }): React.JSX.Element {
     ) : (
       <CircleDot className="size-3.5 shrink-0 text-muted-foreground" />
     )
+  }
+  if (row.kind === 'gitea') {
+    return <GiteaIcon className="size-3.5 shrink-0 text-muted-foreground" />
   }
   if (row.kind === 'branch') {
     return <GitBranch className="size-3.5 shrink-0 text-muted-foreground" />
@@ -133,6 +137,13 @@ export function RowLabel({
           {row.item.number}
         </span>{' '}
         {row.item.title}
+      </span>
+    )
+  }
+  if (row.kind === 'gitea') {
+    return (
+      <span className="min-w-0 truncate">
+        <span className="font-medium text-foreground">#{row.item.number}</span> {row.item.title}
       </span>
     )
   }

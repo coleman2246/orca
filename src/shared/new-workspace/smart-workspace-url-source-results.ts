@@ -2,14 +2,17 @@ import { parseGitHubIssueOrPRLink, type GitHubIssueOrPRLink } from '../github/li
 import { githubRepoIdentityKey } from '../github/repository-identity-key'
 import type { GitHubWorkItem } from '../github/work-item-types'
 import type { GitLabWorkItem } from '../gitlab-types'
+import type { GiteaWorkItem } from '../gitea-types'
 import type { LinearIssue } from '../linear/issue-types'
 import { parseGitLabIssueOrMRLink } from './gitlab-links'
+import { parseGiteaIssueOrPullLink } from './gitea-links'
 import {
   isSmartWorkspaceLinearIssueIntentMatch,
   parseBoundedSmartWorkspaceLinearIssueUrlIntent
 } from './smart-workspace-linear-intent'
 
 export type SmartWorkspaceGitLabUrlIntent = NonNullable<ReturnType<typeof parseGitLabIssueOrMRLink>>
+export type SmartWorkspaceGiteaUrlIntent = NonNullable<ReturnType<typeof parseGiteaIssueOrPullLink>>
 
 type SmartWorkspaceUrlSourceMode =
   | 'smart'
@@ -24,6 +27,7 @@ export type SmartWorkspaceUrlSourceRow =
   | { kind: 'use-name'; value: 'use-name'; name: string }
   | { kind: 'github'; value: string; item: GitHubWorkItem }
   | { kind: 'gitlab'; value: string; item: GitLabWorkItem }
+  | { kind: 'gitea'; value: string; item: GiteaWorkItem }
   | { kind: 'linear'; value: string; issue: LinearIssue }
 
 function toGitHubSourceRow(item: GitHubWorkItem): SmartWorkspaceUrlSourceRow {
@@ -62,12 +66,30 @@ function isGitLabLinkIntentMatch(
   )
 }
 
+function isGiteaLinkIntentMatch(
+  intent: SmartWorkspaceGiteaUrlIntent,
+  item: GiteaWorkItem
+): boolean {
+  const itemLink = parseGiteaIssueOrPullLink(item.url)
+  return (
+    itemLink !== null &&
+    itemLink.type === intent.type &&
+    itemLink.number === intent.number &&
+    itemLink.slug.host.toLowerCase() === intent.slug.host.toLowerCase() &&
+    itemLink.owner.toLowerCase() === intent.owner.toLowerCase() &&
+    itemLink.repo.toLowerCase() === intent.repo.toLowerCase()
+  )
+}
+
 export function buildSmartWorkspaceUrlSourceRows({
   githubItems,
   githubUrlIntent,
   gitlabAvailable,
   gitlabItems,
   gitlabUrlIntent,
+  giteaAvailable = false,
+  giteaItems = [],
+  giteaUrlIntent,
   linearAvailable,
   linearIssues,
   linearUrlIntentOwnsResults,
@@ -80,6 +102,9 @@ export function buildSmartWorkspaceUrlSourceRows({
   gitlabAvailable: boolean
   gitlabItems: GitLabWorkItem[]
   gitlabUrlIntent?: SmartWorkspaceGitLabUrlIntent | null
+  giteaAvailable?: boolean
+  giteaItems?: GiteaWorkItem[]
+  giteaUrlIntent?: SmartWorkspaceGiteaUrlIntent | null
   linearAvailable: boolean
   linearIssues: LinearIssue[]
   linearUrlIntentOwnsResults: boolean
@@ -102,6 +127,21 @@ export function buildSmartWorkspaceUrlSourceRows({
           .map((item) => ({
             kind: 'gitlab' as const,
             value: `gitlab-${item.repoId}-${item.type}-${item.number}`,
+            item
+          }))
+          .slice(0, resultLimit)
+      : []
+    return withSmartNameFallback(mode, trimmed, rows)
+  }
+  // Why: Gitea has no dedicated composer mode in v1 — pasted Gitea URLs
+  // resolve inside smart mode only, after the GitHub/GitLab arms above.
+  if (giteaUrlIntent && mode === 'smart') {
+    const rows = giteaAvailable
+      ? giteaItems
+          .filter((item) => isGiteaLinkIntentMatch(giteaUrlIntent, item))
+          .map((item) => ({
+            kind: 'gitea' as const,
+            value: `gitea-${item.repoId}-${item.type}-${item.number}`,
             item
           }))
           .slice(0, resultLimit)

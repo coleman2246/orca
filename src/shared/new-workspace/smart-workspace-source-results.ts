@@ -1,5 +1,6 @@
 import type { GitHubWorkItem } from '../github/work-item-types'
 import type { GitLabWorkItem } from '../gitlab-types'
+import type { GiteaWorkItem } from '../gitea-types'
 import type { JiraIssue } from '../jira-types'
 import type { LinearIssue } from '../linear/issue-types'
 import type { LinearCollectionResult } from '../linear/workspace-types'
@@ -8,9 +9,11 @@ import { JIRA_ISSUE_KEY_PATTERN, parseJiraIssueUrl } from '../jira-issue-url'
 import type { GitHubIssueOrPRLink } from '../github/links'
 import {
   buildSmartWorkspaceUrlSourceRows,
-  type SmartWorkspaceGitLabUrlIntent
+  type SmartWorkspaceGitLabUrlIntent,
+  type SmartWorkspaceGiteaUrlIntent
 } from './smart-workspace-url-source-results'
 import { isSmartWorkspaceSourceQueryWithinLimit } from './smart-workspace-source-query'
+import { buildForgeSourceRows } from './smart-workspace-forge-source-rows'
 
 export {
   SMART_WORKSPACE_SOURCE_QUERY_MAX_BYTES,
@@ -24,6 +27,7 @@ export type SmartWorkspaceSourceRow =
   | { kind: 'create-branch'; value: string; name: string }
   | { kind: 'github'; value: string; item: GitHubWorkItem }
   | { kind: 'gitlab'; value: string; item: GitLabWorkItem }
+  | { kind: 'gitea'; value: string; item: GiteaWorkItem }
   | { kind: 'branch'; value: string; refName: string; localBranchName: string }
   | { kind: 'linear'; value: string; issue: LinearIssue }
   | { kind: 'jira'; value: string; issue: JiraIssue }
@@ -212,6 +216,9 @@ export function buildSmartWorkspaceSourceRows({
   gitlabAvailable,
   gitlabItems,
   gitlabUrlIntent,
+  giteaAvailable = false,
+  giteaItems = [],
+  giteaUrlIntent,
   jiraIntent = false,
   jiraIssue,
   jiraIssues = [],
@@ -228,6 +235,9 @@ export function buildSmartWorkspaceSourceRows({
   gitlabAvailable: boolean
   gitlabItems: GitLabWorkItem[]
   gitlabUrlIntent?: SmartWorkspaceGitLabUrlIntent | null
+  giteaAvailable?: boolean
+  giteaItems?: GiteaWorkItem[]
+  giteaUrlIntent?: SmartWorkspaceGiteaUrlIntent | null
   jiraIntent?: boolean
   jiraIssue?: JiraIssue | null
   jiraIssues?: JiraIssue[]
@@ -257,6 +267,9 @@ export function buildSmartWorkspaceSourceRows({
     gitlabAvailable,
     gitlabItems,
     gitlabUrlIntent,
+    giteaAvailable,
+    giteaItems,
+    giteaUrlIntent,
     linearAvailable,
     linearIssues: resolvedLinearIssues,
     linearUrlIntentOwnsResults,
@@ -279,15 +292,9 @@ export function buildSmartWorkspaceSourceRows({
   if (mode === 'smart' || mode === 'github') {
     nextRows.push(...githubItems.map(toGitHubSourceRow))
   }
-  if (gitlabAvailable && (mode === 'smart' || mode === 'gitlab')) {
-    nextRows.push(
-      ...gitlabItems.map((item) => ({
-        kind: 'gitlab' as const,
-        value: `gitlab-${item.repoId}-${item.type}-${item.number}`,
-        item
-      }))
-    )
-  }
+  nextRows.push(
+    ...buildForgeSourceRows({ gitlabAvailable, gitlabItems, giteaAvailable, giteaItems, mode })
+  )
   const shouldShowBranches = mode === 'branches' || (mode === 'smart' && trimmed.length > 0)
   if (shouldShowBranches) {
     const branchExactMatch = branches.some(
