@@ -125,10 +125,10 @@ export function useTaskPageProviderState(model: TaskPageSourceAvailabilityModel)
   const displayedGiteaItems = useMemo(() => {
     const query = giteaSearch.trim().toLowerCase()
     return giteaItems.filter((item) => {
-      if (giteaLabel && !item.labels.includes(giteaLabel)) {
+      if (giteaLabel && !(item.labels ?? []).includes(giteaLabel)) {
         return false
       }
-      if (query && !item.title.toLowerCase().includes(query)) {
+      if (query && !(item.title ?? '').toLowerCase().includes(query)) {
         return false
       }
       return true

@@ -9,6 +9,10 @@ export const GITEA_ISSUES_PAGE_LIMIT = 50
 // skip the network round-trip instead of flashing loading skeletons.
 export const GITEA_ISSUES_QUIET_TTL_MS = 30_000
 
+function compareGiteaWorkItems(a: GiteaWorkItem, b: GiteaWorkItem): number {
+  return (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '') || a.id.localeCompare(b.id)
+}
+
 export function useTaskPageGiteaLoading(model: TaskPageGitLabLoadingModel) {
   const {
     selectedRepos,
@@ -113,9 +117,14 @@ export function useTaskPageGiteaLoading(model: TaskPageGitLabLoadingModel) {
             errs.push(r.value.error.message)
           }
         }
-        merged.sort((a, b) => (b.updatedAt ?? '').localeCompare(a.updatedAt ?? ''))
+        merged.sort(compareGiteaWorkItems)
         if (isNewGeneration || fetchPage === 0) {
-          setGiteaItems(merged)
+          // Why: never wipe displayed rows on a total failure — a failed
+          // refresh keeps stale rows behind the banner instead of presenting
+          // an empty list as current. First load still lands on [] + banner.
+          if (merged.length > 0 || errs.length === 0 || displayedGenerationRef.current === null) {
+            setGiteaItems(merged)
+          }
           displayedGenerationRef.current = generation
           if (giteaPage !== 0) {
             setGiteaPage(0)
@@ -129,9 +138,7 @@ export function useTaskPageGiteaLoading(model: TaskPageGitLabLoadingModel) {
             if (fresh.length === 0) {
               return prev
             }
-            return [...prev, ...fresh].sort((a, b) =>
-              (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '')
-            )
+            return [...prev, ...fresh].sort(compareGiteaWorkItems)
           })
         }
         // Why: only banner when the whole generation failed; a partial one

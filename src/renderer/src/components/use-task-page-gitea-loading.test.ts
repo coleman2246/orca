@@ -167,6 +167,31 @@ describe('useTaskPageGiteaLoading', () => {
     expect(view.result.current.giteaItems.map((item) => item.number)).toEqual([7])
   })
 
+  it('keeps stale rows behind the banner when a refresh fails', async () => {
+    const listIssues = vi.fn(async () => ({
+      items: [workItem({ number: 1 }), workItem({ number: 2 })],
+      totalPages: 1
+    }))
+    const { view } = renderGiteaLoadingHook({ listIssues })
+
+    await waitFor(() => expect(view.result.current.giteaItems).toHaveLength(2))
+    expect(view.result.current.giteaError).toBeNull()
+
+    // Why: past the quiet TTL so the refresh actually hits the network.
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 31_000)
+    listIssues.mockRejectedValueOnce(new Error('network down'))
+    try {
+      act(() => {
+        view.rerender({ page: 0, filter: 'open', refreshNonce: 1 })
+      })
+      await waitFor(() => expect(view.result.current.giteaError).toBe('network down'))
+    } finally {
+      nowSpy.mockRestore()
+    }
+    expect(view.result.current.giteaItems.map((item) => item.number)).toEqual([1, 2])
+    expect(view.result.current.giteaLoading).toBe(false)
+  })
+
   it('replaces items from page 1 when the filter changes mid-pagination', async () => {
     const byStateAndPage: Record<string, GiteaWorkItem[]> = {
       'opened:1': [workItem({ number: 1 }), workItem({ number: 2 })],
