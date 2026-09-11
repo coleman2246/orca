@@ -19,6 +19,21 @@ describe('composer issue command', () => {
     })
   })
 
+  it('renders a trusted Gitea issue command from the repo orca.yaml template', () => {
+    expect(
+      buildTrustedComposerIssueCommand({
+        enabled: true,
+        provider: 'gitea',
+        issueNumber: 65,
+        template: 'Work {{artifact_url}} (#{{issue}})',
+        artifactUrl: 'http://192.168.0.11:3200/coleman2247/untitled_game/issues/65',
+        trustDecision: 'run'
+      })
+    ).toEqual({
+      command: 'Work http://192.168.0.11:3200/coleman2247/untitled_game/issues/65 (#65)'
+    })
+  })
+
   it('skips untrusted, disabled, PR, and empty commands', () => {
     expect(
       buildTrustedComposerIssueCommand({ ...readyInput, trustDecision: 'skip' })
