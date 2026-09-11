@@ -2256,7 +2256,9 @@
         "linearModeHasWorktreeTooltip": "Linear tickets linked to an Orca workspace",
         "linearEmptyHasWorktree": "No Linear tickets are linked to an Orca workspace yet. Start work from a Linear issue to see it here.",
         "linearOpenAttachedWorkspace": "Open workspace attached to {{value0}}",
-        "linearWorktreesColumn": "Workspaces"
+        "linearWorktreesColumn": "Workspaces",
+        "4f8e2c9a1d": "Refresh Gitea work items",
+        "giteaSourceLabel": "Gitea"
       },
       "Terminal": {
         "73768427cf": "Close",
@@ -5312,7 +5314,8 @@
           "fee535205b": "Tasks",
           "d599269755": "Hide from sidebar",
           "artifacts": "Artifacts",
-          "skills": "Skills"
+          "skills": "Skills",
+          "giteaOpenTasks": "Open Gitea tasks"
         },
         "SidebarRepositoryFilterSection": {
           "d3a9c4cea1": "Clear",
@@ -8473,7 +8476,9 @@
           "integrationsHint": "Credentials for all providers also live under",
           "integrationsLink": "Integrations",
           "skillHint": ". After Linear is connected, usage examples stay under Settings → Linear.",
-          "incompleteBannerBodyWithLinear": "Hide providers you do not use, or expand a card and finish its steps. For Linear: API access, the agent skill, and Show in Tasks."
+          "incompleteBannerBodyWithLinear": "Hide providers you do not use, or expand a card and finish its steps. For Linear: API access, the agent skill, and Show in Tasks.",
+          "giteaLabel": "Gitea",
+          "giteaDescription": "Connect a Gitea/Forgejo host and show its issues in Tasks."
         },
         "TerminalAppearanceSection": {
           "a14a427ae4": "Thickness of the pane divider line.",
@@ -11837,6 +11842,25 @@
           "targetDescription": "Higher values increase contrast where possible. Background colors stay unchanged.",
           "subtle": "Subtle",
           "strong": "Strong"
+        },
+        "TaskSourceGiteaSetup": {
+          "connectTitle": "Connect Gitea",
+          "connectDescription": "Add a Gitea or Forgejo host with a personal access token so Orca can show its issues in Tasks.",
+          "addSite": "Add Gitea site",
+          "addAccess": "Add Gitea access",
+          "verified": "Verified",
+          "testing": "Testing...",
+          "test": "Test",
+          "removeSite": "Remove {{value0}}",
+          "tokenNote": "Each site token is stored by the secret store, never in settings.",
+          "dialogTitle": "Connect Gitea site",
+          "dialogDescription": "Use a Gitea or Forgejo host URL and a personal access token to browse issues.",
+          "hostLabel": "Gitea host URL",
+          "hostPlaceholder": "https://gitea.example.com",
+          "tokenLabel": "Personal access token",
+          "cancel": "Cancel",
+          "verifying": "Verifying…",
+          "testAndSave": "Test & Save"
         }
       },
       "right": {
@@ -16898,6 +16922,41 @@
         "3d8e5f1b9c": "Share skills behind an unlisted link and install them on any machine you use.",
         "7e1a9c4d2f": "Signing in…",
         "c5b3e8a17d": "Sign in to Orca"
+      },
+      "GiteaItemDialog": {
+        "85a8170279": "No comments yet.",
+        "5f3c8a1d9e": "Gitea action failed.",
+        "3a051b8ade": "Work item",
+        "30c97083c2": "Gitea work item detail",
+        "9bfb4a24d7": "by",
+        "b3c156dd51": "Refresh",
+        "a199eb364b": "Close",
+        "7d2e5f8a1c": "Overview",
+        "c996e2962c": "Conversation",
+        "2b6a8d4f7e": "Meta",
+        "c08e1d5a57": "Comment on {{value0}}{{value1}}…",
+        "84012fa8fb": "Comment",
+        "f2e64d1c20": "Open in Gitea",
+        "131865e231": "Create workspace",
+        "65e784c1f1": "Reopen",
+        "3e8f1a5c7d": "State",
+        "6c2d9e1f4a": "Close issue",
+        "8f1a4b3e9c": "Reopen issue",
+        "dde24ade55": "Labels",
+        "1f2e7a9b4d": "Assignees",
+        "4c9d2f6a1b": "Milestone",
+        "5a7c2e9d1f": "Updated",
+        "89f3f19368": "Title",
+        "908d8d2a73": "Description",
+        "3c0b6ccca7": "bug, backend",
+        "7e5a1c3d8f": "ada, bob",
+        "9a3b7e5c2d": "v1.0",
+        "f72fad3b16": "Cancel",
+        "93f79a3fc1": "Save",
+        "da4174b00f": "Edit",
+        "14423484db": "No description.",
+        "2d7f9e4b6c": "Title is required.",
+        "8b4e2c0f1a": "Comment is too large to submit safely."
       }
     },
     "i18n": {

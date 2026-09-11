@@ -2,6 +2,7 @@ import type { TaskPageGitHubIssueDraftModel } from './use-task-page-github-issue
 import { useState, useMemo, useCallback } from 'react'
 import type { LinearIssue } from '../../../shared/linear/issue-types'
 import type { JiraIssue } from '../../../shared/jira-types'
+import type { GiteaWorkItem } from '../../../shared/gitea-types'
 import { useAppStore } from '@/store'
 import { useShallow } from 'zustand/react/shallow'
 import { findTaskPageLinearIssue } from '@/components/task-page-cache-selectors'
@@ -12,7 +13,8 @@ export function useTaskPageDetailRouting(model: TaskPageGitHubIssueDraftModel) {
     openTaskPage,
     linearTaskSourceContext,
     jiraTaskSourceContext,
-    setDialogWorkItem
+    setDialogWorkItem,
+    setGiteaDialogItem
   } = model
   const [selectedLinearIssueIdState, setSelectedLinearIssueId] = useState<string | null>(null)
   const [selectedLinearIssueFallbackState, setSelectedLinearIssueFallback] =
@@ -108,6 +110,9 @@ export function useTaskPageDetailRouting(model: TaskPageGitHubIssueDraftModel) {
     }
     setDialogWorkItem(null)
     clearSelectedLinearIssue()
+    // Why: the Gitea dialog is in-memory state (no pageData entry like
+    // GitLab) — routing close must clear the dialog target directly.
+    setGiteaDialogItem(null)
     useAppStore.setState((s) => ({
       taskPageData: {
         ...s.taskPageData,
@@ -122,7 +127,7 @@ export function useTaskPageDetailRouting(model: TaskPageGitHubIssueDraftModel) {
         openJiraSourceContext: undefined
       }
     }))
-  }, [clearSelectedLinearIssue, setDialogWorkItem])
+  }, [clearSelectedLinearIssue, setDialogWorkItem, setGiteaDialogItem])
   const [selectedJiraIssueKeyState, setSelectedJiraIssueKey] = useState<string | null>(null)
   const [selectedJiraIssueFallbackState, setSelectedJiraIssueFallback] = useState<JiraIssue | null>(
     null
@@ -183,6 +188,16 @@ export function useTaskPageDetailRouting(model: TaskPageGitHubIssueDraftModel) {
     [jiraTaskSourceContext, openTaskPage]
   )
 
+  // Why: Gitea dialog entry — in-memory like Linear's floating select;
+  // there is no pageData openGiteaWorkItem, so opening is a direct
+  // giteaDialogItem set (Task 7) rather than an openTaskPage round-trip.
+  const openGiteaDetailPage = useCallback(
+    (item: GiteaWorkItem) => {
+      setGiteaDialogItem(item)
+    },
+    [setGiteaDialogItem]
+  )
+
   // Linear tab state
   const nextModel = model as typeof model & {
     selectedLinearIssueId: typeof selectedLinearIssueId
@@ -210,6 +225,7 @@ export function useTaskPageDetailRouting(model: TaskPageGitHubIssueDraftModel) {
     jiraDetailSourceContext: typeof jiraDetailSourceContext
     setSelectedJiraIssue: typeof setSelectedJiraIssue
     openJiraDetailPage: typeof openJiraDetailPage
+    openGiteaDetailPage: typeof openGiteaDetailPage
   }
   nextModel.selectedLinearIssueId = selectedLinearIssueId
   nextModel.setSelectedLinearIssueId = setSelectedLinearIssueId
@@ -236,6 +252,7 @@ export function useTaskPageDetailRouting(model: TaskPageGitHubIssueDraftModel) {
   nextModel.jiraDetailSourceContext = jiraDetailSourceContext
   nextModel.setSelectedJiraIssue = setSelectedJiraIssue
   nextModel.openJiraDetailPage = openJiraDetailPage
+  nextModel.openGiteaDetailPage = openGiteaDetailPage
   return nextModel
 }
 export type TaskPageDetailRoutingModel = ReturnType<typeof useTaskPageDetailRouting>
