@@ -34,6 +34,7 @@ describe('Gitea repository ref parsing', () => {
   it('parses HTTPS remotes and derives the API base URL', () => {
     expect(parseGiteaRepoRef('https://git.example.com/team/project.git')).toEqual({
       host: 'git.example.com',
+      hostIdentity: 'git.example.com',
       owner: 'team',
       repo: 'project',
       apiBaseUrl: 'https://git.example.com/api/v1',
@@ -44,6 +45,7 @@ describe('Gitea repository ref parsing', () => {
   it('strips trailing slashes after .git suffixes', () => {
     expect(parseGiteaRepoRef('https://git.example.com/team/project.git/')).toEqual({
       host: 'git.example.com',
+      hostIdentity: 'git.example.com',
       owner: 'team',
       repo: 'project',
       apiBaseUrl: 'https://git.example.com/api/v1',
@@ -59,6 +61,7 @@ describe('Gitea repository ref parsing', () => {
   it('preserves an HTTP subpath when deriving the API base URL', () => {
     expect(parseGiteaRepoRef('https://git.example.com/code/team/project.git')).toEqual({
       host: 'git.example.com',
+      hostIdentity: 'git.example.com',
       owner: 'team',
       repo: 'project',
       apiBaseUrl: 'https://git.example.com/code/api/v1',
@@ -69,6 +72,7 @@ describe('Gitea repository ref parsing', () => {
   it('parses scp-like SSH remotes with an HTTPS web/API base', () => {
     expect(parseGiteaRepoRef('git@gitea.example.test:team/project.git')).toEqual({
       host: 'gitea.example.test',
+      hostIdentity: 'gitea.example.test',
       owner: 'team',
       repo: 'project',
       apiBaseUrl: 'https://gitea.example.test/api/v1',
@@ -79,6 +83,7 @@ describe('Gitea repository ref parsing', () => {
   it('preserves a scp-like SSH subpath when deriving the API base URL', () => {
     expect(parseGiteaRepoRef('git@gitea.example.test:code/team/project.git')).toEqual({
       host: 'gitea.example.test',
+      hostIdentity: 'gitea.example.test',
       owner: 'team',
       repo: 'project',
       apiBaseUrl: 'https://gitea.example.test/code/api/v1',
@@ -89,10 +94,35 @@ describe('Gitea repository ref parsing', () => {
   it('parses ssh:// remotes without carrying the SSH port into web/API URLs', () => {
     expect(parseGiteaRepoRef('ssh://git@gitea.example.test:2222/team/project.git')).toEqual({
       host: 'gitea.example.test',
+      hostIdentity: 'gitea.example.test',
       owner: 'team',
       repo: 'project',
       apiBaseUrl: 'https://gitea.example.test/api/v1',
       webBaseUrl: 'https://gitea.example.test'
+    })
+  })
+
+  it('keeps the HTTP(S) port as part of the host identity, for site matching', () => {
+    // Why: an http(s) remote's port IS the web/API endpoint (e.g. a
+    // self-hosted instance on a nonstandard port), so it must be kept for
+    // getGiteaSiteForRepo to tell two services on one host apart.
+    expect(parseGiteaRepoRef('https://host:8443/team/project.git')).toMatchObject({
+      hostIdentity: 'host:8443'
+    })
+  })
+
+  it('drops the SSH transport port from the host identity', () => {
+    // Why: the ssh port (e.g. :2222) is a transport detail, not the web/API
+    // endpoint, so it must not become part of the identity used to match a
+    // stored site — see getGiteaSiteForRepo in site-credential-store.ts.
+    expect(
+      parseGiteaRepoRef('ssh://git@192.168.0.11:2222/coleman2247/untitled_game.git')
+    ).toMatchObject({ hostIdentity: '192.168.0.11' })
+  })
+
+  it('drops the (nonexistent) port from a scp-like remote host identity', () => {
+    expect(parseGiteaRepoRef('git@192.168.0.11:coleman2247/untitled_game.git')).toMatchObject({
+      hostIdentity: '192.168.0.11'
     })
   })
 

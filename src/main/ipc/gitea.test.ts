@@ -59,6 +59,7 @@ import { registerGiteaIssueHandlers } from './gitea-issue-handlers'
 
 const repoRef = {
   host: 'git.example.com',
+  hostIdentity: 'git.example.com',
   owner: 'octo',
   repo: 'orca',
   apiBaseUrl: 'https://git.example.com/api/v1',

@@ -8,6 +8,7 @@ const OLD_ENV = process.env
 const site: GiteaSite = { id: 'site-1', baseUrl: 'https://git.example.com' }
 const repo: GiteaRepoRef = {
   host: 'git.example.com',
+  hostIdentity: 'git.example.com',
   owner: 'o',
   repo: 'r',
   apiBaseUrl: 'https://git.example.com/api/v1',

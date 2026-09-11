@@ -4,7 +4,7 @@ import type * as Os from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { matchGiteaSite } from './site-credential-store'
-import type { GiteaRepoRef } from './repository-ref'
+import { parseGiteaRepoRef, type GiteaRepoRef } from './repository-ref'
 
 describe('matchGiteaSite', () => {
   it('matches by origin with longest-prefix win', () => {
@@ -37,7 +37,14 @@ function mkdtempLike(prefix: string): string {
 }
 
 function repoRef(apiBaseUrl: string, webBaseUrl: string): GiteaRepoRef {
-  return { host: 'git.example.com', owner: 'o', repo: 'r', apiBaseUrl, webBaseUrl }
+  return {
+    host: 'git.example.com',
+    hostIdentity: new URL(apiBaseUrl).host,
+    owner: 'o',
+    repo: 'r',
+    apiBaseUrl,
+    webBaseUrl
+  }
 }
 
 /** Fresh store instance per test so site-file/token caches never leak. */
@@ -247,6 +254,89 @@ describe('gitea site credential store', () => {
     await expect(testGiteaSite('nope')).resolves.toEqual({
       ok: false,
       error: expect.any(String)
+    })
+  })
+
+  describe('getGiteaSiteForRepo — ssh/scp host-identity fallback', () => {
+    async function storeWithFetch() {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => Response.json({ login: 'ada' }))
+      )
+      return loadStoreModule()
+    }
+
+    it('matches an ssh:// remote to a stored site by hostname, ignoring the ssh transport port', async () => {
+      const store = await storeWithFetch()
+      await store.saveGiteaSite('http://192.168.0.11:3200', 'tok')
+      const repo = parseGiteaRepoRef('ssh://git@192.168.0.11:2222/coleman2247/untitled_game.git')
+      expect(repo).not.toBeNull()
+
+      const site = store.getGiteaSiteForRepo(repo as GiteaRepoRef)
+      expect(site?.baseUrl).toBe('http://192.168.0.11:3200/api/v1')
+      expect(store.resolveGiteaAuth(repo as GiteaRepoRef)).toEqual({
+        baseUrl: 'http://192.168.0.11:3200/api/v1',
+        token: 'tok',
+        source: 'site'
+      })
+    })
+
+    it('matches a scp-like remote the same way', async () => {
+      const store = await storeWithFetch()
+      await store.saveGiteaSite('http://192.168.0.11:3200', 'tok')
+      const repo = parseGiteaRepoRef('git@192.168.0.11:coleman2247/untitled_game.git')
+      expect(repo).not.toBeNull()
+
+      expect(store.getGiteaSiteForRepo(repo as GiteaRepoRef)?.baseUrl).toBe(
+        'http://192.168.0.11:3200/api/v1'
+      )
+    })
+
+    it('does not match a port-bearing http(s) remote against a different-port stored site', async () => {
+      const store = await storeWithFetch()
+      await store.saveGiteaSite('http://host:3200', 'tok')
+      const repo = parseGiteaRepoRef('https://host:8443/o/r.git')
+      expect(repo).not.toBeNull()
+
+      expect(store.getGiteaSiteForRepo(repo as GiteaRepoRef)).toBeNull()
+    })
+
+    it('still matches a port-bearing http(s) remote against the exact same host:port', async () => {
+      const store = await storeWithFetch()
+      await store.saveGiteaSite('https://host:8443', 'tok')
+      const repo = parseGiteaRepoRef('https://host:8443/o/r.git')
+      expect(repo).not.toBeNull()
+
+      expect(store.getGiteaSiteForRepo(repo as GiteaRepoRef)?.baseUrl).toBe(
+        'https://host:8443/api/v1'
+      )
+    })
+
+    it('picks the first-saved stored site when an ssh remote could match two ports on one hostname', async () => {
+      // Documents the chosen behaviour rather than inventing a uniqueness
+      // rule: like matchGiteaSite's longest-prefix win, ambiguity resolves to
+      // one deterministic answer — here, saveGiteaSite's existing
+      // most-recently-saved-first order — instead of throwing.
+      const store = await storeWithFetch()
+      await store.saveGiteaSite('http://host:3200', 'tok-first')
+      await store.saveGiteaSite('http://host:3300', 'tok-second')
+      const repo = parseGiteaRepoRef('git@host:o/r.git')
+      expect(repo).not.toBeNull()
+
+      expect(store.getGiteaSiteForRepo(repo as GiteaRepoRef)?.baseUrl).toBe(
+        'http://host:3300/api/v1'
+      )
+    })
+
+    it('matches an ssh remote to a site installed under a URL subpath, and the API base uses the subpath', async () => {
+      const store = await storeWithFetch()
+      await store.saveGiteaSite('https://host/gitea', 'tok')
+      const repo = parseGiteaRepoRef('ssh://git@host/o/r.git')
+      expect(repo).not.toBeNull()
+
+      expect(store.getGiteaSiteForRepo(repo as GiteaRepoRef)?.baseUrl).toBe(
+        'https://host/gitea/api/v1'
+      )
     })
   })
 })

@@ -2,6 +2,14 @@ import { createRemoteRefProbeCache } from '../git/remote-ref-probe-cache'
 
 export type GiteaRepoRef = {
   host: string
+  /**
+   * Host identity used to match a stored Gitea site, mirroring
+   * `hostIdentityFromUrl` in `../gitlab/project-ref-parser.ts`: `host:port`
+   * for http(s) remotes (the URL port IS the web/API endpoint), bare
+   * hostname for ssh/git/scp-like remotes (the port is a transport port,
+   * e.g. `:2222`, that says nothing about the instance).
+   */
+  hostIdentity: string
   owner: string
   repo: string
   apiBaseUrl: string
@@ -66,7 +74,25 @@ function apiBaseUrlFromWebBase(webBaseUrl: string): string {
   return `${webBaseUrl.replace(/\/+$/, '')}/api/v1`
 }
 
-function makeRepoRef(host: string, path: string, webOrigin: string): GiteaRepoRef | null {
+// Why: mirrors hostIdentityFromUrl in ../gitlab/project-ref-parser.ts. For
+// http(s) remotes the URL port IS the web/API endpoint (a self-hosted
+// instance on a nonstandard port), so it is kept. For ssh/git remotes the
+// port is a transport port (e.g. ssh on :2222) that does not identify the
+// Gitea instance, so it is dropped and only the hostname is used.
+function hostIdentityFromUrl(url: URL): string {
+  const protocol = url.protocol.toLowerCase()
+  if (protocol === 'http:' || protocol === 'https:') {
+    return url.host
+  }
+  return url.hostname
+}
+
+function makeRepoRef(
+  host: string,
+  hostIdentity: string,
+  path: string,
+  webOrigin: string
+): GiteaRepoRef | null {
   const normalizedHost = host.toLowerCase()
   if (
     !normalizedHost ||
@@ -83,11 +109,17 @@ function makeRepoRef(host: string, path: string, webOrigin: string): GiteaRepoRe
 
   // Why: Gitea/Forgejo can be hosted below a URL subpath. SSH-style remotes
   // carry that base path in the repo path, so derive the web/API base here.
+  // This is only a best-effort default: the real web/API base for a repo
+  // matched to a stored site comes from that site's own baseUrl (see
+  // getGiteaSiteForRepo in site-credential-store.ts), because an ssh/scp
+  // remote's host has no way to say which scheme or port the instance's
+  // web UI actually uses.
   const webBaseUrl = parsed.basePath
     ? `${webOrigin.replace(/\/+$/, '')}/${parsed.basePath}`
     : webOrigin
   return {
     host: normalizedHost,
+    hostIdentity: hostIdentity.toLowerCase(),
     owner: parsed.owner,
     repo: parsed.repo,
     apiBaseUrl: apiBaseUrlFromWebBase(webBaseUrl),
@@ -102,7 +134,7 @@ export function parseGiteaRepoRef(remoteUrl: string): GiteaRepoRef | null {
     if (scpLike) {
       const host = scpLike[1]
       const path = scpLike[2]
-      return makeRepoRef(host, path, `https://${host.toLowerCase()}`)
+      return makeRepoRef(host, host, path, `https://${host.toLowerCase()}`)
     }
   }
 
@@ -122,7 +154,7 @@ export function parseGiteaRepoRef(remoteUrl: string): GiteaRepoRef | null {
       protocol === 'http:' || protocol === 'https:'
         ? `${protocol}//${url.host}`
         : `https://${url.hostname.toLowerCase()}`
-    return makeRepoRef(url.hostname, url.pathname, webOrigin)
+    return makeRepoRef(url.hostname, hostIdentityFromUrl(url), url.pathname, webOrigin)
   } catch {
     return null
   }

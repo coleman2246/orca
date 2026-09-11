@@ -11,6 +11,7 @@ import {
   readStoredCredentialToken
 } from '../integration-credential-file'
 import { normalizeGiteaApiBaseUrl } from './client'
+import { resolveGiteaSiteForRepo } from './host-identity-site-match'
 import type { GiteaRepoRef } from './repository-ref'
 
 export type GiteaSiteFile = {
@@ -224,8 +225,7 @@ export function matchGiteaSite<T extends { baseUrl: string }>(url: string, sites
 }
 
 export function getGiteaSiteForRepo(repo: GiteaRepoRef): GiteaSite | null {
-  const sites = getSiteFile().sites
-  return matchGiteaSite(repo.apiBaseUrl, sites) ?? matchGiteaSite(repo.webBaseUrl, sites)
+  return resolveGiteaSiteForRepo(repo, getSiteFile().sites, matchGiteaSite)
 }
 
 export function getGiteaConnectionStatus(): GiteaConnectionStatus {
