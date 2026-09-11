@@ -4,9 +4,11 @@ import type { RuntimeGitHubReviewMutationCommands } from './runtime-github-revie
 import type { RuntimeGitHubReviewQueryCommands } from './runtime-github-review-query-commands'
 import type { RuntimeGitLabMutationCommands } from './runtime-gitlab-mutation-commands'
 import type { RuntimeGitLabQueryCommands } from './runtime-gitlab-query-commands'
+import type { RuntimeGiteaQueryCommands } from './runtime-gitea-query-commands'
 
 type GitLabQueryName = Exclude<keyof RuntimeGitLabQueryCommands, 'constructor'>
 type GitLabMutationName = Exclude<keyof RuntimeGitLabMutationCommands, 'constructor'>
+type GiteaQueryName = Exclude<keyof RuntimeGiteaQueryCommands, 'constructor'>
 type GitHubProjectName = Exclude<keyof RuntimeGitHubProjectCommands, 'constructor'>
 type GitHubReviewQueryName =
   | 'getRepoIssue'
@@ -36,6 +38,7 @@ type GitHubIssueCommentName =
 
 export type RuntimeReviewCommandSurface = {} & Pick<RuntimeGitLabQueryCommands, GitLabQueryName> &
   Pick<RuntimeGitLabMutationCommands, GitLabMutationName> &
+  Pick<RuntimeGiteaQueryCommands, GiteaQueryName> &
   Pick<RuntimeGitHubReviewQueryCommands, GitHubReviewQueryName> &
   Pick<RuntimeGitHubReviewMutationCommands, GitHubReviewMutationName> &
   Pick<RuntimeGitHubIssueCommentCommands, GitHubIssueCommentName> &
@@ -44,6 +47,7 @@ export type RuntimeReviewCommandSurface = {} & Pick<RuntimeGitLabQueryCommands, 
 type RuntimeReviewCommandOwners = {
   gitLabQueries: RuntimeGitLabQueryCommands
   gitLabMutations: RuntimeGitLabMutationCommands
+  giteaQueries: RuntimeGiteaQueryCommands
   gitHubReviewQueries: RuntimeGitHubReviewQueryCommands
   gitHubReviewMutations: RuntimeGitHubReviewMutationCommands
   gitHubIssueComments: RuntimeGitHubIssueCommentCommands
@@ -56,6 +60,7 @@ export function installRuntimeReviewCommandSurface(
 ): void {
   const glq = owners.gitLabQueries
   const glm = owners.gitLabMutations
+  const gtq = owners.giteaQueries
   const ghq = owners.gitHubReviewQueries
   const ghm = owners.gitHubReviewMutations
   const comments = owners.gitHubIssueComments
@@ -70,6 +75,7 @@ export function installRuntimeReviewCommandSurface(
     listGitLabRepoLabels: glq.listGitLabRepoLabels.bind(glq),
     getGitLabRepoWorkItemDetails: glq.getGitLabRepoWorkItemDetails.bind(glq),
     getGitLabRepoWorkItemByPath: glq.getGitLabRepoWorkItemByPath.bind(glq),
+    getGiteaRepoIssue: gtq.getGiteaRepoIssue.bind(gtq),
     createGitLabRepoIssue: glm.createGitLabRepoIssue.bind(glm),
     updateGitLabRepoIssue: glm.updateGitLabRepoIssue.bind(glm),
     addGitLabRepoIssueComment: glm.addGitLabRepoIssueComment.bind(glm),

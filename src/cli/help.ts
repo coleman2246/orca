@@ -210,6 +210,7 @@ export function formatFlagHelp(flag: string): string {
     interrupt: '--interrupt            Send as an interrupt-style input when supported',
     id: '--id <id>             Identifier for a target item or permission',
     issue: '--issue <number|null>  Linked GitHub issue number',
+    'gitea-issue': '--gitea-issue <n|url|null> Linked Gitea issue; null clears on set',
     'linear-issue':
       '--linear-issue <id|url|null> Linked Linear issue identifier or URL; null clears on set',
     json: '--json                 Emit machine-readable JSON',
@@ -286,7 +287,11 @@ export function formatFlagHelp(flag: string): string {
     profile: '--profile <id>        Browser profile id',
     'show-profile': '--show-profile        Include tab profile in text output',
     'no-ua-spoof': "--no-ua-spoof         Keep Electron's native user agent",
-    format: '--format <png|jpeg>    Screenshot image format'
+    format: '--format <png|jpeg>    Screenshot image format',
+    children: '--children             Include recursive child issues',
+    depth: '--depth <n>            Child issue depth for --children/--full',
+    attachments: '--attachments          Include attachment metadata and URLs',
+    relations: '--relations            Include blocking, related, and duplicate links'
   }
 
   if (flag === 'current') {
@@ -294,18 +299,6 @@ export function formatFlagHelp(flag: string): string {
   }
   if (flag === 'comments') {
     return '--comments             Include threaded Linear comments'
-  }
-  if (flag === 'children') {
-    return '--children             Include recursive child issues'
-  }
-  if (flag === 'depth') {
-    return '--depth <n>            Child issue depth for --children/--full'
-  }
-  if (flag === 'attachments') {
-    return '--attachments          Include attachment metadata and URLs'
-  }
-  if (flag === 'relations') {
-    return '--relations            Include blocking, related, and duplicate links'
   }
   if (flag === 'activity') {
     return '--activity             Include issue field-change history'
