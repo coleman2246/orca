@@ -42,6 +42,7 @@ function workItem(overrides: Partial<GiteaWorkItem> = {}): GiteaWorkItem {
     state: 'open',
     url: 'https://git.example.com/acme/app/issues/7',
     labels: ['bug'],
+    assignees: ['ada'],
     updatedAt: '2026-09-11T00:00:00Z',
     author: 'ada',
     repoId: 'r1',

@@ -17,6 +17,7 @@ function workItem(overrides: Partial<GiteaWorkItem> & { number: number }): Gitea
     state: 'open',
     url: `https://git.example.com/acme/app/issues/${overrides.number}`,
     labels: [],
+    assignees: [],
     updatedAt: '2026-09-11T00:00:00Z',
     author: null,
     repoId: 'r1',

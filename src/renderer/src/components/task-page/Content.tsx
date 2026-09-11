@@ -5,6 +5,7 @@ import ProjectViewWrapper from '@/components/github-project/ProjectViewWrapper'
 import { TaskPageGitHubList } from './github/List'
 import { TaskPageGitLabTodoList } from './gitlab/TodoList'
 import { TaskPageGitLabItemList } from './gitlab/ItemList'
+import { TaskPageGiteaItemList } from './gitea/ItemList'
 import { TaskPageJiraContent } from './jira/Content'
 export function TaskPageContent({
   model
@@ -69,6 +70,8 @@ export function TaskPageContent({
     <TaskPageGitLabTodoList model={model} />
   ) : taskSource === 'gitlab' ? (
     <TaskPageGitLabItemList model={model} />
+  ) : taskSource === 'gitea' ? (
+    <TaskPageGiteaItemList model={model} />
   ) : (
     <TaskPageJiraContent model={model} />
   )

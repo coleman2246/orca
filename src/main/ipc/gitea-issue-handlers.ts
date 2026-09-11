@@ -123,6 +123,7 @@ export function registerGiteaIssueHandlers(store: Store): void {
         state: issue.state,
         url: issue.url,
         labels: issue.labels,
+        assignees: issue.assignees,
         updatedAt: issue.updatedAt,
         author: null,
         repoId: repo.id,

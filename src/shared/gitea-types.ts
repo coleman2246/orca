@@ -55,6 +55,7 @@ export type GiteaWorkItem = {
   state: 'open' | 'closed'
   url: string
   labels: string[]
+  assignees: string[]
   updatedAt: string
   author: string | null
   repoId: string

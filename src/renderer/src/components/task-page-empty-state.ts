@@ -1,6 +1,6 @@
 import { translate } from '@/i18n/i18n'
 
-export type RepoBackedTaskEmptyStateProvider = 'github' | 'gitlab'
+export type RepoBackedTaskEmptyStateProvider = 'github' | 'gitlab' | 'gitea'
 
 export type RepoBackedTaskEmptyState = {
   title: string
@@ -33,6 +33,15 @@ export function getRepoBackedTaskEmptyState(args: {
       description: translate(
         'auto.components.taskPageEmptyState.changeQueryDescription',
         'Change the query or clear it.'
+      )
+    }
+  }
+  if (args.provider === 'gitea') {
+    return {
+      title: translate('auto.components.taskPageEmptyState.noGiteaIssuesTitle', 'No Gitea issues'),
+      description: translate(
+        'auto.components.taskPageEmptyState.noGiteaIssuesDescription',
+        'No Gitea issues match this filter.'
       )
     }
   }

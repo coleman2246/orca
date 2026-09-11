@@ -2258,7 +2258,10 @@
         "linearOpenAttachedWorkspace": "Open workspace attached to {{value0}}",
         "linearWorktreesColumn": "Workspaces",
         "4f8e2c9a1d": "Refresh Gitea work items",
-        "giteaSourceLabel": "Gitea"
+        "giteaSourceLabel": "Gitea",
+        "3f9e5c2a8d": "Assignee",
+        "7a1e4f6b3c": "Retry",
+        "9d4f7a2e5b": "Open in Gitea"
       },
       "Terminal": {
         "73768427cf": "Close",
@@ -16603,7 +16606,9 @@
         "noGitLabMrsTitle": "No GitLab merge requests",
         "noGitLabMrsDescription": "No GitLab MRs match this filter.",
         "noGitLabWorkTitle": "No GitLab work",
-        "noGitLabWorkDescription": "No GitLab work matches this filter."
+        "noGitLabWorkDescription": "No GitLab work matches this filter.",
+        "noGiteaIssuesTitle": "No Gitea issues",
+        "noGiteaIssuesDescription": "No Gitea issues match this filter."
       },
       "taskSourceContextSummary": {
         "sourceUnavailable": "{{value0}} source unavailable: {{value1}}",

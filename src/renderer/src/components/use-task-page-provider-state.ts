@@ -134,6 +134,14 @@ export function useTaskPageProviderState(model: TaskPageSourceAvailabilityModel)
       return true
     })
   }, [giteaItems, giteaSearch, giteaLabel])
+  const giteaEmptyState = useMemo(
+    () =>
+      getRepoBackedTaskEmptyState({
+        provider: 'gitea',
+        selectedRepoCount: selectedRepos.length
+      }),
+    [selectedRepos.length]
+  )
   const nextModel = model as typeof model & {
     taskSourceManuallyChangedRef: typeof taskSourceManuallyChangedRef
     lastPageTaskSourceRef: typeof lastPageTaskSourceRef
@@ -188,6 +196,7 @@ export function useTaskPageProviderState(model: TaskPageSourceAvailabilityModel)
     giteaDialogItem: typeof giteaDialogItem
     setGiteaDialogItem: typeof setGiteaDialogItem
     displayedGiteaItems: typeof displayedGiteaItems
+    giteaEmptyState: typeof giteaEmptyState
   }
   nextModel.taskSourceManuallyChangedRef = taskSourceManuallyChangedRef
   nextModel.lastPageTaskSourceRef = lastPageTaskSourceRef
@@ -242,6 +251,7 @@ export function useTaskPageProviderState(model: TaskPageSourceAvailabilityModel)
   nextModel.giteaDialogItem = giteaDialogItem
   nextModel.setGiteaDialogItem = setGiteaDialogItem
   nextModel.displayedGiteaItems = displayedGiteaItems
+  nextModel.giteaEmptyState = giteaEmptyState
   return nextModel
 }
 export type TaskPageProviderStateModel = ReturnType<typeof useTaskPageProviderState>
